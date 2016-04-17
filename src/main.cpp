@@ -51,12 +51,12 @@ double drawSample(sample& sample)
 	return 0;
 }
 
-double drawResult(nn& n)
+double drawResult(nn& n,string title)
 {
 	mglGraph gr;
 	gr.SetSize(800,600);
 	gr.SetRanges(0,10,0,10);
-	gr.Title("result");
+	gr.Title(title.c_str());
 	gr.Light(true);
 	gr.Axis(); gr.Grid(); gr.Box();
 	gr.Label('x',"x",0.5);
@@ -96,19 +96,26 @@ double drawResult(nn& n)
 int main(int argc,char* argv[]){
 	sample s;
 	nn n;
-
-	if( !s.read("data/s1") )
+	if(argc != 4){
+		cout << " data,iteration,rate " << endl;
 		return -1;
+	}
+	if( !s.read(argv[1]) ){
+		cout << "open fail : " << argv[1] << endl;
+		return -1;
+	}
 
 	s.list();
 
 	//n.showw();
 	n.activation = logistic;
 	n.dactivation = dlogistic;
+	n.learning_rate = atof( argv[3] );
 
-	for(int j=0; j<1500; ++j){
-		if(j%200 == 199){
-			drawResult(n);
+	for(int j=0; j<atoi(argv[2]); ++j){
+		if(false){
+		//if(j%200 == 199){
+			drawResult(n,"r");
 			Mat r = imread("r.bmp");
 			imshow("r",r);
 			waitKey(0);
@@ -116,8 +123,7 @@ int main(int argc,char* argv[]){
 		for(int i=0; i<s.size(); i++){
 		//for(int i=0; i<1; i++){
 			n.input.at(0) = s[i].feature[0];
-			n.input.at(1) = s[i].feature[1];
-			n.de.fill(0);
+			n.input.at(1) = s[i].feature[1]; n.de.fill(0);
 			n.de.at( s[i].l ) = 1;
 			n.train();
 			/*
@@ -130,9 +136,14 @@ int main(int argc,char* argv[]){
 	n.showw();
 	n.showd();
 	n.showdw();
+	string ta = "result i=";
+	string tb = argv[2];
+	string tc = " lr=";
+	string td = argv[3];
 
 	drawSample(s);
-	drawResult(n);
+	ta = ta+tb+tc+td;
+	drawResult(n,ta);
 
 
 	Mat m = imread("s.bmp");

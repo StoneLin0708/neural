@@ -35,14 +35,15 @@ bool sample::isFloat(std::string& test){
 }
 
 void sample::errString(std::string& line, std::string& str,
-						 int s ,int e){
-	cout << " sample error in line  \"" << line << "\""<< endl
-		 << "  at character " << s << " to " << e
-		 << " \""<< str << "\""<< endl;
+		int s ,int e){
+	cout<< " sample error in line  \"" << line << "\""<< endl
+		<< "  at character " << s << " to " << e
+		<< " \""<< str << "\""<< endl;
 }
 
 bool sample::readFeature(std::string& in, double& out,
 		int& s,int& e){
+
 	string tmp;
 
 	e = in.find(',',s);

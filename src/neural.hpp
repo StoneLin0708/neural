@@ -3,9 +3,9 @@
 #include <string>
 
 #define input_num 2
-#define hidden_num 2
+#define hidden_num 25
 #define output_num 2
-#define learning_rate 0.2
+#define dlearning_rate 0.2
 
 //input
 //hidden weight
@@ -29,6 +29,7 @@ public:
 	double (*activation)(double in);
 	double (*dactivation)(double in);
 	double error();
+	double learning_rate;
 
 	arma::mat input; //input_num+1
 	arma::mat hidden; //input_num+1 hidden_num+1

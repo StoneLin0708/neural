@@ -21,6 +21,7 @@ nn::nn(){
 
 	hdel = zeros(input_num+1, hidden_num+1); //hidden delta
 	odel = zeros(hidden_num+1, output_num); //output delta
+	learning_rate = dlearning_rate;
 }
 
 void nn::randomInit(){
