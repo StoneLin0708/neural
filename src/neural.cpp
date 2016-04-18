@@ -61,16 +61,7 @@ void nn::test(){
 
 }
 
-void nn::train(){
-	//forward
-	//equal nn::test()
-	hs = input.t() * hidden;
-	for(int i=0; i<hidden_num; ++i)
-		ho.at(i) = activation( hs.at(i) );
-
-	os = ho.t() * output;
-	for(int i=0; i<output_num; ++i)
-		oo.at(i) = activation( os.at(i) );
+void nn::cal_del(){
 	//output to hidden
 	mat od = zeros(output_num);
 	for(int i=0; i<output_num; ++i){
@@ -95,7 +86,22 @@ void nn::train(){
 				learning_rate * hd.at(i) * input[j];
 		}
 	}
-	hidden += hdel;
-	output += odel;
+
+}
+
+
+void nn::wupdate(){
+	hidden += hdels;
+	output += odels;
+}
+
+void nn::clear_dels(){
+	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
+	odels = zeros(hidden_num+1, output_num); //output delta
+}
+
+void nn::train(){
+	test();
+	cal_del();
 }
 

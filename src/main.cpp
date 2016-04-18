@@ -53,9 +53,10 @@ double drawSample(sample& sample)
 
 double drawResult(nn& n,string title)
 {
+	const int size = 10;
 	mglGraph gr;
 	gr.SetSize(800,600);
-	gr.SetRanges(0,10,0,10);
+	gr.SetRanges(0,size,0,size);
 	gr.Title(title.c_str());
 	gr.Light(true);
 	gr.Axis(); gr.Grid(); gr.Box();
@@ -66,8 +67,8 @@ double drawResult(nn& n,string title)
 
 	mglData	xdat(1), ydat(1);
 	int label;
-	for(double x=0; x<10; x+=0.1){
-		for(double y=0; y<10; y+=0.1){
+	for(double x=0; x<size; x+=0.1){
+		for(double y=0; y<size; y+=0.1){
 			xdat.a[0] = x;
 			ydat.a[0] = y;
 			n.input.at(0) = x;
@@ -120,22 +121,25 @@ int main(int argc,char* argv[]){
 			imshow("r",r);
 			waitKey(0);
 		}
+		n.clear_dels();
 		for(int i=0; i<s.size(); i++){
-		//for(int i=0; i<1; i++){
 			n.input.at(0) = s[i].feature[0];
 			n.input.at(1) = s[i].feature[1]; n.de.fill(0);
 			n.de.at( s[i].l ) = 1;
-			n.train();
-			/*
-			n.showd();
-			n.showw();
-			n.showdw();
-			*/
+			//n.train();
+			n.test();
+			n.cal_del();
+			n.odels += n.odel;
+			n.hdels += n.hdel;
+			cout << "1-o = " << 1-n.oo[s[i].l] << endl;
 		}
+		n.wupdate();
 	}
+	/*
 	n.showw();
 	n.showd();
 	n.showdw();
+	*/
 	string ta = "result i=";
 	string tb = argv[2];
 	string tc = " lr=";
@@ -144,7 +148,6 @@ int main(int argc,char* argv[]){
 	drawSample(s);
 	ta = ta+tb+tc+td;
 	drawResult(n,ta);
-
 
 	Mat m = imread("s.bmp");
 	imshow("s",m);

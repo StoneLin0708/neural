@@ -3,7 +3,7 @@
 #include <string>
 
 #define input_num 2
-#define hidden_num 25
+#define hidden_num 20
 #define output_num 2
 #define dlearning_rate 0.2
 
@@ -18,6 +18,9 @@ public:
 
 	bool loadSample(std::string& path);
 	void test();
+	void cal_del();
+	void wupdate();
+	void clear_dels();
 	void train();
 
 	void randomInit();
@@ -42,6 +45,9 @@ public:
 
 	arma::mat odel; //hidden_num+1 output_num
 	arma::mat hdel; //input_num+1 hidden_num+1
+
+	arma::mat odels; //hidden_num+1 output_num
+	arma::mat hdels; //input_num+1 hidden_num+1
 	//sample;
 private:
 
