@@ -5,7 +5,7 @@ CC = g++
 
 CFLAGS = -Wall -Wextra `pkg-config --cflags opencv`
 DBGCFLAGS = -DDEBUG -g
-RELCFLAGS = -o3  
+RELCFLAGS = -o3
 
 #
 #project files

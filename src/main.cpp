@@ -106,8 +106,8 @@ double drawError(nn& n, int iteration, string title)
 	gr.Title(title.c_str());
 	gr.Light(true);
 	gr.Axis(); gr.Grid(); gr.Box();
-	gr.Label('x',"x",0.5);
-	gr.Label('y',"y",0.5);
+	gr.Label('x',"iteration",0.5);
+	gr.Label('y',"error",0.5);
 
 	char flag[10] = "b. ";
 
@@ -123,10 +123,12 @@ double drawError(nn& n, int iteration, string title)
 }
 
 int main(int argc,char* argv[]){
+	/*
 	for(int i = -20; i<=20; i+=4)
 		cout<< i << " : a = " << setw(13) << logistic(i)
 			<< " a'= " << setw(13) << dlogistic(i) << endl;
-	//return 0;
+	return 0;
+	*/
 	string path = argv[1];
 	nn n;
 	if(argc != 4){

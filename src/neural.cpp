@@ -80,26 +80,33 @@ void nn::test(){
 
 }
 
+void nn::clear_dels(){
+	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
+	odels = zeros(hidden_num+1, output_num); //output delta
+	ods = zeros(output_num);
+	hds = zeros(hidden_num+1);
+}
+
 void nn::cal_del(){
 	//output to hidden
 	for(int i=0; i<output_num; ++i){
-		od.at(i) = (de[i] - oo[i]) * dactivation(os[i]);
+		od(i) = (de(i) - oo(i)) * dactivation(os(i));
 		for(int j=0; j<hidden_num+1; ++j){
-			odel.at(j,i) =
-				learning_rate * od.at(i) * ho[j];
-			//cout << i << ',' << j << ':' <<odel.at(j,i) << endl;
+			odel(j,i) =
+				learning_rate * od(i) * ho(j);
 		}
 	}
 	//hidden to input
+	hd = zeros(hidden_num+1);
 	for(int i=0; i<hidden_num+1; ++i){
 		for(int k=0; k<output_num; ++k){
-			hd.at(i) += od.at(k)*output.at(i,k);
+			hd(i) += od(k)*output(i,k);
 		}
-		hd.at(i) *= dactivation(hs[i]);
+		hd(i) *= dactivation(hs(i));
 		for(int j=0; j<input_num+1; ++j)
 		{
-			hdel.at(j,i) =
-				learning_rate * hd.at(i) * input[j];
+			hdel(j,i) =
+				learning_rate * hd(i) * input(j);
 		}
 	}
 
@@ -114,20 +121,14 @@ void nn::wupdate(){
 void nn::showsd(){
 	double sod=0, shd=0;
 	for(int i=0; i<output_num; ++i)
-		sod += abs(ods[i])*1000;
+		sod += abs(ods(i))*1000;
 	for(int i=0; i<hidden_num+1; ++i)
-		shd += abs(hds[i])*1000;
+		shd += abs(hds(i))*1000;
 	cout<< "error sum at output = " << setw(8) << sod
 		<< " at hidden = " << setw(8) << shd << endl;
 	e.push_back(sod);
 }
 
-void nn::clear_dels(){
-	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
-	odels = zeros(hidden_num+1, output_num); //output delta
-	ods = zeros(output_num);
-	hds = zeros(hidden_num+1);
-}
 
 void nn::train(int iteration){
 	for(int j=0; j<iteration; ++j){
@@ -155,7 +156,8 @@ void nn::train(int iteration){
 		showd();
 		showdw();
 */
-		if(j%100 == 0){
+		if(j%50 == 0){
+		//if(false){
 			cout << "i = " << setw(5) << j << ' ';
 			showsd();
 		}
@@ -163,9 +165,9 @@ void nn::train(int iteration){
 		wupdate();
 	}
 	showd();
-/*
 	showw();
 	showdw();
+/*
 */
 }
 
