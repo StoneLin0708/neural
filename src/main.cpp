@@ -48,7 +48,7 @@ double drawSample(sample& sample)
 		}
 		gr.Plot(xdat, ydat,flag);
 	}
-	gr.WriteBMP("s.bmp");
+	gr.WritePNG("s.png");
 	return 0;
 }
 
@@ -93,7 +93,7 @@ double drawResult(nn& n,string title)
 			gr.Plot(xdat, ydat,flag);
 		}
 	}
-	gr.WriteBMP("r.bmp");
+	gr.WritePNG("r.png");
 	return 0;
 }
 
@@ -118,7 +118,7 @@ double drawError(nn& n, int iteration, string title)
 		ydat.a[0] = n.e[i];
 		gr.Plot(xdat, ydat,flag);
 	}
-	gr.WriteBMP("e.bmp");
+	gr.WritePNG("e.png");
 	return 0;
 }
 
@@ -155,11 +155,11 @@ int main(int argc,char* argv[]){
 
 	drawError(n,atoi(argv[2]),"error");
 
-	Mat m = imread("s.bmp");
+	Mat m = imread("s.png");
 	imshow("s",m);
-	Mat r = imread("r.bmp");
+	Mat r = imread("r.png");
 	imshow("r",r);
-	Mat e = imread("e.bmp");
+	Mat e = imread("e.png");
 	imshow("e",e);
 	waitKey(0);
 
