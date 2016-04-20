@@ -81,7 +81,6 @@ double drawResult(nn& n,string title)
 				label = 1;
 			else
 				label = 2;
-			flag[0] = 'w';
 			switch(label){
 				case 0:
 					flag[0] = 'r';
@@ -90,7 +89,8 @@ double drawResult(nn& n,string title)
 					flag[0] = 'g';
 					break;
 			}
-			gr.Plot(xdat, ydat,flag);
+			if (label != 2)
+				gr.Plot(xdat, ydat,flag);
 		}
 	}
 	gr.WritePNG("r.png");
@@ -112,8 +112,7 @@ double drawError(nn& n, int iteration, string title)
 	char flag[10] = "b. ";
 
 	mglData	xdat(1), ydat(1);
-	int label;
-	for(int i=0; i<n.e.size(); ++i){
+	for(int i=0; i<(int)n.e.size(); ++i){
 		xdat.a[0] = i * iteration/n.e.size();
 		ydat.a[0] = n.e[i];
 		gr.Plot(xdat, ydat,flag);

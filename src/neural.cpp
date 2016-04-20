@@ -24,6 +24,8 @@ nn::nn(){
 	odel = zeros(hidden_num+1, output_num); //output delta
 	od = zeros(output_num);
 	hd = zeros(hidden_num+1);
+	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
+	odels = zeros(hidden_num+1, output_num); //output delta
 	ods = zeros(output_num);
 	hds = zeros(hidden_num+1);
 	learning_rate = dlearning_rate;
@@ -81,10 +83,10 @@ void nn::test(){
 }
 
 void nn::clear_dels(){
-	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
-	odels = zeros(hidden_num+1, output_num); //output delta
-	ods = zeros(output_num);
-	hds = zeros(hidden_num+1);
+	hdels.zeros();
+	odels.zeros();
+	ods.zeros();
+	hds.zeros();
 }
 
 void nn::cal_del(){
@@ -97,7 +99,7 @@ void nn::cal_del(){
 		}
 	}
 	//hidden to input
-	hd = zeros(hidden_num+1);
+	hd.zeros();
 	for(int i=0; i<hidden_num+1; ++i){
 		for(int k=0; k<output_num; ++k){
 			hd(i) += od(k)*output(i,k);
@@ -133,7 +135,7 @@ void nn::showsd(){
 void nn::train(int iteration){
 	for(int j=0; j<iteration; ++j){
 		clear_dels();
-		for(int i=0; i<_s.size(); i++){
+		for(int i=0; i<(int)_s.size(); i++){
 			//set input
 			input.at(0) = _s[i].feature[0]/10;
 			input.at(1) = _s[i].feature[1]/10;
