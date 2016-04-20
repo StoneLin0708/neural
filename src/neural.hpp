@@ -56,7 +56,10 @@ public:
 	arma::mat hds; //hidden_num+1
 	arma::mat odels; //hidden_num+1 output_num
 	arma::mat hdels; //input_num+1 hidden_num+1
+
 	sample& getSample();
+	std::vector<double> e;
+
 private:
 	sample _s;
 

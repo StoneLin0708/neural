@@ -1,5 +1,6 @@
 #include "neural.hpp"
 #include <iostream>
+#include <iomanip>
 #include <mgl2/mgl.h>
 #include <math.h>
 #include "sample.hpp"
@@ -96,7 +97,36 @@ double drawResult(nn& n,string title)
 	return 0;
 }
 
+double drawError(nn& n, int iteration, string title)
+{
+	mglGraph gr;
+	gr.SetSize(800,600);
+	gr.SetRanges(0,iteration,
+			0,*max_element(n.e.begin(),n.e.end()) );
+	gr.Title(title.c_str());
+	gr.Light(true);
+	gr.Axis(); gr.Grid(); gr.Box();
+	gr.Label('x',"x",0.5);
+	gr.Label('y',"y",0.5);
+
+	char flag[10] = "b. ";
+
+	mglData	xdat(1), ydat(1);
+	int label;
+	for(int i=0; i<n.e.size(); ++i){
+		xdat.a[0] = i * iteration/n.e.size();
+		ydat.a[0] = n.e[i];
+		gr.Plot(xdat, ydat,flag);
+	}
+	gr.WriteBMP("e.bmp");
+	return 0;
+}
+
 int main(int argc,char* argv[]){
+	for(int i = -20; i<=20; i+=4)
+		cout<< i << " : a = " << setw(13) << logistic(i)
+			<< " a'= " << setw(13) << dlogistic(i) << endl;
+	//return 0;
 	string path = argv[1];
 	nn n;
 	if(argc != 4){
@@ -108,17 +138,12 @@ int main(int argc,char* argv[]){
 		return -1;
 	}
 
-	//n.showw();
 	n.activation = logistic;
 	n.dactivation = dlogistic;
 	n.learning_rate = atof( argv[3] );
 
 	n.train( atoi(argv[2]) );
-	/*
-	n.showw();
-	n.showd();
-	n.showdw();
-	*/
+
 	string ta = "result i=";
 	string tb = argv[2];
 	string tc = " lr=";
@@ -128,10 +153,14 @@ int main(int argc,char* argv[]){
 	ta = ta+tb+tc+td;
 	drawResult(n,ta);
 
+	drawError(n,atoi(argv[2]),"error");
+
 	Mat m = imread("s.bmp");
 	imshow("s",m);
 	Mat r = imread("r.bmp");
 	imshow("r",r);
+	Mat e = imread("e.bmp");
+	imshow("e",e);
 	waitKey(0);
 
 }

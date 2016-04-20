@@ -118,6 +118,7 @@ void nn::showsd(){
 		shd += abs(hds[i])*1000;
 	cout<< "error sum at output = " << setw(8) << sod
 		<< " at hidden = " << setw(8) << shd << endl;
+	e.push_back(sod);
 }
 
 void nn::clear_dels(){
@@ -144,18 +145,20 @@ void nn::train(int iteration){
 			hdels += hdel;
 			//cout << "1-o = " << 1-n.oo[s[i].l] << endl;
 		}
-		cout << "i = " << setw(5) << j << ' ';
 /*
 		showw();
 		showd();
 		showdw();
 */
-		showsd();
+		if(j%100 == 0){
+			cout << "i = " << setw(5) << j << ' ';
+			showsd();
+		}
 		wupdate();
 	}
-	showw();
-/*
 	showd();
+/*
+	showw();
 	showdw();
 */
 }
