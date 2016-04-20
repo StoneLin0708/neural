@@ -3,8 +3,8 @@
 #include <string>
 #include "sample.hpp"
 
-#define input_num 2
-#define hidden_num 5
+#define input_num 3
+#define hidden_num 10
 #define output_num 2
 #define dlearning_rate 0.2
 

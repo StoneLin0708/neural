@@ -97,6 +97,92 @@ double drawResult(nn& n,string title)
 	return 0;
 }
 
+double drawSample3d(sample& sample, string out)
+{
+	mglGraph gr;
+	gr.SetSize(800,600);
+	gr.SetRanges(0,10,0,10,0,10);
+	gr.Title("sample");
+	gr.Rotate(60,50);
+	gr.Light(true);
+	gr.Axis(); gr.Grid(); gr.Box();
+	gr.Label('x',"x",0.5);
+	gr.Label('y',"y",0.5);
+	gr.Label('z',"z",0.5);
+
+	char flag[10] = " . ";
+
+	mglData	xdat(1), ydat(1), zdat(1);
+
+	for(int i=0; i<(int)sample.size(); i++){
+		xdat.a[0] = sample[i].feature[0];
+		ydat.a[0] = sample[i].feature[1];
+		zdat.a[0] = sample[i].feature[2];
+		switch((int)sample[i].l){
+			case 0:
+				flag[0] = 'r';
+				break;
+			case 1:
+				flag[0] = 'g';
+				break;
+		}
+		gr.Plot(xdat, ydat, zdat, flag);
+	}
+	gr.WritePNG(out.c_str());
+	return 0;
+}
+
+double drawResult3d(nn& n,string title,string out)
+{
+	const int size = 10;
+	mglGraph gr;
+	gr.SetSize(800,600);
+	gr.SetRanges(0,size,0,size,0,size);
+	gr.Title(title.c_str());
+	gr.Rotate(60,50);
+	gr.Light(true);
+	gr.Axis(); gr.Grid(); gr.Box();
+	gr.Label('x',"x",0.5);
+	gr.Label('y',"y",0.5);
+	gr.Label('z',"z",0.5);
+
+	char flag[10] = " .";
+
+	mglData	xdat(1), ydat(1), zdat(1);
+	int label;
+	for(double x=0; x<size; x+=1){
+		for(double y=0; y<size; y+=1){
+			for(double z=0; z<size; z+=1){
+				xdat.a[0] = x;
+				ydat.a[0] = y;
+				zdat.a[0] = z;
+				n.input.at(0) = x/10;
+				n.input.at(1) = y/10;
+				n.input.at(2) = z/10;
+				n.test();
+				if(n.oo[0] >= 0.99)
+					label = 0;
+				else if(n.oo[1] >= 0.99)
+					label = 1;
+				else
+					label = 2;
+				switch(label){
+					case 0:
+						flag[0] = 'r';
+						break;
+					case 1:
+						flag[0] = 'g';
+						break;
+				}
+				if (label != 2)
+					gr.Plot(xdat, ydat, zdat, flag);
+			}
+		}
+	}
+	gr.WritePNG(out.c_str());
+	return 0;
+}
+
 double drawError(nn& n, int iteration, string title)
 {
 	mglGraph gr;
@@ -150,15 +236,15 @@ int main(int argc,char* argv[]){
 	string tc = " lr=";
 	string td = argv[3];
 
-	drawSample(n.getSample());
+	drawSample3d(n.getSample(),"s3d.png");
 	ta = ta+tb+tc+td;
-	drawResult(n,ta);
+	drawResult3d(n,ta,"r3d.png");
 
 	drawError(n,atoi(argv[2]),"error");
 
-	Mat m = imread("s.png");
+	Mat m = imread("s3d.png");
 	imshow("s",m);
-	Mat r = imread("r.png");
+	Mat r = imread("r3d.png");
 	imshow("r",r);
 	Mat e = imread("e.png");
 	imshow("e",e);
