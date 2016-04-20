@@ -1,8 +1,8 @@
-#include "sample.hpp"
 #include "neural.hpp"
 #include <iostream>
 #include <mgl2/mgl.h>
 #include <math.h>
+#include "sample.hpp"
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -71,14 +71,16 @@ double drawResult(nn& n,string title)
 		for(double y=0; y<size; y+=0.1){
 			xdat.a[0] = x;
 			ydat.a[0] = y;
-			n.input.at(0) = x;
-			n.input.at(1) = y;
+			n.input.at(0) = x/10;
+			n.input.at(1) = y/10;
 			n.test();
-			if(n.oo[0] >= n.oo[1])
+			if(n.oo[0] >= 0.99)
 				label = 0;
-			else
+			else if(n.oo[1] >= 0.99)
 				label = 1;
-
+			else
+				label = 2;
+			flag[0] = 'w';
 			switch(label){
 				case 0:
 					flag[0] = 'r';
@@ -95,46 +97,23 @@ double drawResult(nn& n,string title)
 }
 
 int main(int argc,char* argv[]){
-	sample s;
+	string path = argv[1];
 	nn n;
 	if(argc != 4){
 		cout << " data,iteration,rate " << endl;
 		return -1;
 	}
-	if( !s.read(argv[1]) ){
+	if( !n.readSample(path) ){
 		cout << "open fail : " << argv[1] << endl;
 		return -1;
 	}
-
-	s.list();
 
 	//n.showw();
 	n.activation = logistic;
 	n.dactivation = dlogistic;
 	n.learning_rate = atof( argv[3] );
 
-	for(int j=0; j<atoi(argv[2]); ++j){
-		if(false){
-		//if(j%200 == 199){
-			drawResult(n,"r");
-			Mat r = imread("r.bmp");
-			imshow("r",r);
-			waitKey(0);
-		}
-		n.clear_dels();
-		for(int i=0; i<s.size(); i++){
-			n.input.at(0) = s[i].feature[0];
-			n.input.at(1) = s[i].feature[1]; n.de.fill(0);
-			n.de.at( s[i].l ) = 1;
-			//n.train();
-			n.test();
-			n.cal_del();
-			n.odels += n.odel;
-			n.hdels += n.hdel;
-			cout << "1-o = " << 1-n.oo[s[i].l] << endl;
-		}
-		n.wupdate();
-	}
+	n.train( atoi(argv[2]) );
 	/*
 	n.showw();
 	n.showd();
@@ -145,7 +124,7 @@ int main(int argc,char* argv[]){
 	string tc = " lr=";
 	string td = argv[3];
 
-	drawSample(s);
+	drawSample(n.getSample());
 	ta = ta+tb+tc+td;
 	drawResult(n,ta);
 
