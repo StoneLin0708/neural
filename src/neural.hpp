@@ -15,15 +15,15 @@
 class nn{
 public:
 	nn();
+	void randomInit();
 
 	bool readSample(std::string& path);
-	void test();
-	void cal_del();
-	void wupdate();
-	void clear_dels();
+	void test(); //forward
+	void cal_del(); //calcualte single data error
+	void wupdate(); //update error to weight
+	void clear_dels(); //do after update
 	void train(int iteration);
 
-	void randomInit();
 
 	void showw();
 	void showdw();
@@ -32,8 +32,9 @@ public:
 
 	double (*activation)(double in);
 	double (*dactivation)(double in);
-	double error();
+
 	double learning_rate;
+
 	//matrixs use : size
 	arma::mat input; //input data : input_num+1
 

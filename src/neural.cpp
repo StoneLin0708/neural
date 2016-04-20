@@ -29,6 +29,12 @@ nn::nn(){
 	learning_rate = dlearning_rate;
 }
 
+
+void nn::randomInit(){
+	hidden = randu<mat>(input_num+1, hidden_num+1);
+	output = randu<mat>(hidden_num+1, output_num);
+}
+
 sample& nn::getSample(){
 	return _s;
 }
@@ -41,11 +47,6 @@ bool nn::readSample(std::string& path){
 	else
 		return false;
 };
-
-void nn::randomInit(){
-	hidden = randu<mat>(input_num+1, hidden_num+1);
-	output = randu<mat>(hidden_num+1, output_num);
-}
 
 void nn::showw(){
 	cout << "hidden" << endl << hidden << endl;
@@ -132,13 +133,17 @@ void nn::train(int iteration){
 	for(int j=0; j<iteration; ++j){
 		clear_dels();
 		for(int i=0; i<_s.size(); i++){
+			//set input
 			input.at(0) = _s[i].feature[0]/10;
 			input.at(1) = _s[i].feature[1]/10;
+			//set desire output
 			de.fill(0);
 			de.at( _s[i].l ) = 1;
-			//n.train();
+			//forward
 			test();
+			//back propagation
 			cal_del();
+			//sum of error
 			ods += od;
 			hds += hd;
 			odels += odel;
@@ -154,6 +159,7 @@ void nn::train(int iteration){
 			cout << "i = " << setw(5) << j << ' ';
 			showsd();
 		}
+		//finish a iteration, change neural weight
 		wupdate();
 	}
 	showd();
