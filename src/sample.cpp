@@ -9,7 +9,6 @@ using namespace std;
 
 sample::sample(){
 
-
 }
 
 data_t& sample::operator[](int i){
@@ -100,7 +99,7 @@ bool sample::read(const char* path){
 	data_t tmp;
 
     if ( sample_f.fail() ){
-        printf("fail to open file : %s\n", path);
+        cout<< "fail to open file : " << path<< endl;
         return false;
     }
 
@@ -116,17 +115,21 @@ bool sample::read(const char* path){
     return true;
 }
 
+void sample::clear(){
+	_data.clear();
+}
+
 void sample::list(){
-	cout << "[";
+	cout << "[  ";
 	for(int i=0; i<(int)_data[0].feature.size(); i++)
-		cout << setw(4) << i << " ,";
-	cout << "    l ]" << endl;
+		cout<< setw(4) << i << " ,";
+	cout<< "    l ]" << endl;
 
 	for(int i=0; i<(int)_data.size(); i++){
-		cout << "[ ";
+		cout<< "[ ";
 		for(int j=0; j<(int)_data[0].feature.size(); j++)
-			cout << setw(5) << _data[i].feature[j] << " ,";
-		cout << setw(3) << _data[i].l << " ]"  << endl;
+			cout<< setw(5) << _data[i].feature[j] << " ,";
+		cout<< setw(3) << _data[i].l << " ]"  << endl;
 	}
 }
 

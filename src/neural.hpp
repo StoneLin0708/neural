@@ -3,18 +3,49 @@
 #include <string>
 #include "sample.hpp"
 
-#define input_num 3
-#define hidden_num 10
-#define output_num 2
 #define dlearning_rate 0.2
-
+#define node_max 50
 //input
 //hidden weight
 //output
 
+class nlayer{
+public:
+	typedef enum{
+		hidden = 1,
+		output = 0
+	}layer_t;
+
+	//nlayer();
+	nlayer(arma::rowvec& input,layer_t type,int number_nodes);
+
+	arma::rowvec* i;
+	arma::mat w; //weight
+	arma::rowvec s; //i*w
+	arma::rowvec o; //s activation
+	arma::rowvec d;
+	arma::mat del;
+	arma::mat dels;
+	double (*act)(double in);
+	double (*dact)(double in);
+
+	layer_t type();
+	int n_nodes() {return _nodes};
+	int n_input() {return _input};
+	void random_w(double min, double max);
+
+private:
+	bool _init;
+	void _initialize(arma::rowvec& input, layer_t type, int n_nodes);
+
+	layer_t _type;
+	int _input;
+	int _nodes;
+};
+
 class nn{
 public:
-	nn();
+	nn(int input_number, int hidden_number, int output_number);
 	void randomInit();
 
 	bool readSample(std::string& path);
@@ -23,7 +54,6 @@ public:
 	void wupdate(); //update error to weight
 	void clear_dels(); //do after update
 	void train(int iteration);
-
 
 	void showw();
 	void showdw();
@@ -36,32 +66,19 @@ public:
 	double learning_rate;
 
 	//matrixs use : size
-	arma::mat input; //input data : input_num+1
-
-	arma::mat hidden; //weight of hidden : input_num+1 hidden_num+1
-	arma::mat hs; //hidden out before activation : input_num
-	arma::mat ho; //hidden out activated : input_num+1
-
-	arma::mat output; //weight of output : hidden_num+1 output_num
-	arma::mat os; //output out before activation : output_num
-	arma::mat oo; //output out activated : output_num
-
-	arma::mat de; //desire output : output_num
+	arma::rowvec input; //input data : input_num+1
+	std::vector<nlayer> layer;
+	arma::rowvec de; //desire output : output_num
 	//train matrix
-	arma::mat od; //output_num
-	arma::mat hd; //hidden_num+1
-	arma::mat odel; //hidden_num+1 output_num
-	arma::mat hdel; //input_num+1 hidden_num+1
-
-	arma::mat ods; //output_num
-	arma::mat hds; //hidden_num+1
 	arma::mat odels; //hidden_num+1 output_num
-	arma::mat hdels; //input_num+1 hidden_num+1
 
 	sample& getSample();
 	std::vector<double> e;
+	double normalize_scale;
+	int iteration;
 
 private:
+	int input_num;
 	sample _s;
 
 };
