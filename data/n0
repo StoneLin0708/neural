@@ -1,7 +1,7 @@
-sample data="data/s2"
-sample scale=10
+sampledata="data/s1"
+samplescale=10
 iteration=8000
-learning rate=0.5
-input feature=2
-hidden=1,5,""
-output=2,""
+learningrate=0.5
+inputfeature=2
+hidden=1,5
+output=2,2

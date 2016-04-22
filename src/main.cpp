@@ -20,7 +20,7 @@ double dlogistic(double in){
 	double re = logistic(in);
 	return re*(1-re);
 }
-
+/*
 double drawSample(sample& sample)
 {
 	mglGraph gr;
@@ -207,7 +207,7 @@ double drawError(nn& n, int iteration, string title)
 	gr.WritePNG("e.png");
 	return 0;
 }
-
+*/
 int main(int argc,char* argv[]){
 	/*
 	for(int i = -20; i<=20; i+=4)
@@ -215,28 +215,21 @@ int main(int argc,char* argv[]){
 			<< " a'= " << setw(13) << dlogistic(i) << endl;
 	return 0;
 	*/
-	if(argc != 8){
-		cout <<" data,iteration,rate,in,hidden,out,data scale" << endl;
+	if(argc != 2){
+		cout <<" data" << endl;
 		return -1;
 	}
-
-	nn n(atoi(argv[4]), atoi(argv[5]), atoi(argv[6]));
-	n.normalize_scale = atof(argv[7]);
 	string path = argv[1];
+	cout << logistic << endl;
+	cout << dlogistic << endl;
+	nn n(path,logistic,dlogistic);
 
-	if( !n.readSample(path) ){
-		cout << "open fail : " << argv[1] << endl;
-		return -1;
-	}
+	//n.train( atoi(argv[2]) );
 
-	n.activation = logistic;
-	n.dactivation = dlogistic;
-	n.learning_rate = atof( argv[3] );
+	//drawError(n,atoi(argv[2]),"error");
 
-	n.train( atoi(argv[2]) );
-
-	drawError(n,atoi(argv[2]),"error");
-
+	return 0;
+	/*
 	cv::Mat e = imread("e.png");
 	imshow("e",e);
 
@@ -262,4 +255,5 @@ int main(int argc,char* argv[]){
 	waitKey(0);
 
 	return 0;
+	*/
 }

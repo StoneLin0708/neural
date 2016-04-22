@@ -15,9 +15,11 @@ public:
 		hidden = 1,
 		output = 0
 	}layer_t;
-
 	//nlayer();
-	nlayer(arma::rowvec& input,layer_t type,int number_nodes);
+	nlayer(
+		arma::rowvec& input, layer_t type, int n_nodes,
+		double (*activation)(double in),
+		double (*dactivation)(double in) );
 
 	arma::rowvec* i;
 	arma::mat w; //weight
@@ -30,13 +32,16 @@ public:
 	double (*dact)(double in);
 
 	layer_t type();
-	int n_nodes() {return _nodes};
-	int n_input() {return _input};
+	int n_nodes() {return _nodes;};
+	int n_input() {return _input;};
 	void random_w(double min, double max);
 
-private:
 	bool _init;
-	void _initialize(arma::rowvec& input, layer_t type, int n_nodes);
+private:
+	void _initialize(
+		arma::rowvec& input, layer_t type, int n_nodes,
+		double (*act)(double in),
+		double (*dact)(double in) );
 
 	layer_t _type;
 	int _input;
@@ -45,10 +50,12 @@ private:
 
 class nn{
 public:
-	nn(int input_number, int hidden_number, int output_number);
+	//nn(int input_number, int hidden_number, int output_number);
+	nn(std::string& path, double (*activation)(double), double (*dactivation)(double));
 	void randomInit();
 
 	bool readSample(std::string& path);
+	bool readnn(std::string& path);
 	void test(); //forward
 	void cal_del(); //calcualte single data error
 	void wupdate(); //update error to weight
@@ -60,8 +67,8 @@ public:
 	void showd();
 	void showsd();
 
-	double (*activation)(double in);
-	double (*dactivation)(double in);
+	double (*act)(double in);
+	double (*dact)(double in);
 
 	double learning_rate;
 
@@ -81,5 +88,8 @@ private:
 	int input_num;
 	sample _s;
 
+	bool readLayer(int line, std::string& in);
+	void errString(std::string& line, std::string& str,int s ,int e);
+	bool readFor(int line, std::string& in, const std::string text);
 };
 
