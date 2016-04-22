@@ -87,21 +87,25 @@ double drawError(nn& n, int iteration, string title)
 	mglGraph gr;
 	gr.SetSize(800,600);
 	gr.SetRanges(0,iteration,
-			0,*max_element(n.e.begin(),n.e.end()) );
+			0.001,*max_element(n.e.begin(),n.e.end())*10 );
+			//0.1, 100 );
+	gr.SetFunc("","lg(y)");
+	//gr->Grid("!","h=");
+	//gr->FPlot("sqrt(1+x^2)");
 	gr.Title(title.c_str());
 	gr.Light(true);
 	gr.Axis(); gr.Grid(); gr.Box();
-	gr.Label('x',"iteration",0.5);
-	gr.Label('y',"error",0.5);
+	gr.Label('x',"iteration",0.2);
+	gr.Label('y',"error",0.2);
 
-	char flag[10] = "b. ";
-
-	mglData	xdat(1), ydat(1);
-	for(int i=0; i<(int)n.e.size(); ++i){
-		xdat.a[0] = i * iteration/n.e.size();
-		ydat.a[0] = n.e[i];
-		gr.Plot(xdat, ydat,flag);
+	char flag[10] = "b.";
+	int s=(int)n.e.size();
+	mglData	xdat(s), ydat(s);
+	for(int i=0; i<s; ++i){
+		xdat.a[i] = i * iteration/n.e.size();
+		ydat.a[i] = n.e[i];
 	}
+	gr.Plot(xdat, ydat,flag);
 	gr.WritePNG("e.png");
 	return 0;
 }
