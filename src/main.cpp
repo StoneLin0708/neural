@@ -72,8 +72,8 @@ double drawResult(nn& n,string title)
 		for(double y=0; y<size; y+=0.1){
 			xdat.a[0] = x;
 			ydat.a[0] = y;
-			n.input.at(0) = x/10;
-			n.input.at(1) = y/10;
+			n.input.at(0) = x*n.scale;
+			n.input.at(1) = y*n.scale;
 			n.test();
 			if(n.oo[0] >= 0.99)
 				label = 0;
@@ -215,40 +215,47 @@ int main(int argc,char* argv[]){
 	return 0;
 	*/
 	string path = argv[1];
-	nn n;
-	if(argc != 4){
-		cout << " data,iteration,rate " << endl;
+	nn n(atoi(argv[4]),atoi(argv[5]));
+	if(argc != 7){
+		cout << " data,iteration,rate,ni,hi,scale " << endl;
 		return -1;
 	}
 	if( !n.readSample(path) ){
 		cout << "open fail : " << argv[1] << endl;
 		return -1;
 	}
-
+	n.scale = atof(argv[6]);
 	n.activation = logistic;
 	n.dactivation = dlogistic;
 	n.learning_rate = atof( argv[3] );
 
 	n.train( atoi(argv[2]) );
 
+	drawError(n,atoi(argv[2]),"error");
+
+	Mat e = imread("e.png");
+
+	if(n.getSample()[0].feature.size() > 2 ){
+		imshow("e",e);
+		waitKey(0);
+		return 0;
+	}
 	string ta = "result i=";
 	string tb = argv[2];
 	string tc = " lr=";
 	string td = argv[3];
 
-	drawSample3d(n.getSample(),"s3d.png");
+	drawSample(n.getSample());
 	ta = ta+tb+tc+td;
-	drawResult3d(n,ta,"r3d.png");
+	drawResult(n,ta);
 
-	drawError(n,atoi(argv[2]),"error");
 
-	Mat m = imread("s3d.png");
+	Mat m = imread("s.png");
 	imshow("s",m);
-	Mat r = imread("r3d.png");
+	Mat r = imread("r.png");
 	imshow("r",r);
-	Mat e = imread("e.png");
 	imshow("e",e);
 	waitKey(0);
-
+	return 0;
 }
 

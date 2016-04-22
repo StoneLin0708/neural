@@ -5,7 +5,11 @@
 using namespace std;
 using namespace arma;
 
-nn::nn(){
+nn::nn(int ni, int nh){
+	input_num = ni;
+	hidden_num = nh;
+	output_num = 2;
+	scale = 1;
 	input = zeros(input_num+1);
 
 	randomInit(); //random hidden & output weight
@@ -28,7 +32,12 @@ nn::nn(){
 	odels = zeros(hidden_num+1, output_num); //output delta
 	ods = zeros(output_num);
 	hds = zeros(hidden_num+1);
+
+	oerr = zeros(output_num);
+	oerrs = zeros(output_num);
+
 	learning_rate = dlearning_rate;
+
 }
 
 
@@ -85,6 +94,7 @@ void nn::test(){
 void nn::clear_dels(){
 	hdels.zeros();
 	odels.zeros();
+	oerrs.zeros();
 	ods.zeros();
 	hds.zeros();
 }
@@ -92,6 +102,7 @@ void nn::clear_dels(){
 void nn::cal_del(){
 	//output to hidden
 	for(int i=0; i<output_num; ++i){
+		oerr(i) = (de(i) - oo(i));
 		od(i) = (de(i) - oo(i)) * dactivation(os(i));
 		for(int j=0; j<hidden_num+1; ++j){
 			odel(j,i) =
@@ -123,9 +134,9 @@ void nn::wupdate(){
 void nn::showsd(){
 	double sod=0, shd=0;
 	for(int i=0; i<output_num; ++i)
-		sod += abs(ods(i))*1000;
+		sod += abs(oerrs(i));
 	for(int i=0; i<hidden_num+1; ++i)
-		shd += abs(hds(i))*1000;
+		shd += abs(hds(i));
 	cout<< "error sum at output = " << setw(8) << sod
 		<< " at hidden = " << setw(8) << shd << endl;
 	e.push_back(sod);
@@ -133,12 +144,13 @@ void nn::showsd(){
 
 
 void nn::train(int iteration){
+	int size = _s[0].feature.size();
 	for(int j=0; j<iteration; ++j){
 		clear_dels();
 		for(int i=0; i<(int)_s.size(); i++){
 			//set input
-			input.at(0) = _s[i].feature[0]/10;
-			input.at(1) = _s[i].feature[1]/10;
+			for(int k=0; k<size; ++k)
+				input.at(k) = _s[i].feature[k]*scale;
 			//set desire output
 			de.fill(0);
 			de.at( _s[i].l ) = 1;
@@ -147,6 +159,7 @@ void nn::train(int iteration){
 			//back propagation
 			cal_del();
 			//sum of error
+			oerrs += oerr;
 			ods += od;
 			hds += hd;
 			odels += odel;

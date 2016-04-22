@@ -3,9 +3,6 @@
 #include <string>
 #include "sample.hpp"
 
-#define input_num 3
-#define hidden_num 10
-#define output_num 2
 #define dlearning_rate 0.2
 
 //input
@@ -14,7 +11,7 @@
 
 class nn{
 public:
-	nn();
+	nn(int ni,int nh);
 	void randomInit();
 
 	bool readSample(std::string& path);
@@ -48,10 +45,14 @@ public:
 
 	arma::mat de; //desire output : output_num
 	//train matrix
+
 	arma::mat od; //output_num
 	arma::mat hd; //hidden_num+1
 	arma::mat odel; //hidden_num+1 output_num
 	arma::mat hdel; //input_num+1 hidden_num+1
+
+	arma::mat oerr; //output_num
+	arma::mat oerrs; //output_num
 
 	arma::mat ods; //output_num
 	arma::mat hds; //hidden_num+1
@@ -60,8 +61,12 @@ public:
 
 	sample& getSample();
 	std::vector<double> e;
+	double scale;
 
 private:
+	int input_num;
+	int hidden_num;
+	int output_num;
 	sample _s;
 
 };

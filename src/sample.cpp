@@ -9,7 +9,6 @@ using namespace std;
 
 sample::sample(){
 
-
 }
 
 data_t& sample::operator[](int i){
