@@ -28,14 +28,16 @@ public:
 	bool saveTo(const char* path);
 	data_t& operator[](int i);
 	unsigned int size();
+	void clear();
 
 	void list();
+
+	bool isInt(std::string& test);
+	bool isFloat(std::string& test);
 
 private:
 	data_v _data;
 	std::string _path;
-	bool isInt(std::string& test);
-	bool isFloat(std::string& test);
 	void errString(std::string& line, std::string& str,int s ,int e);
 	bool readFeature(std::string& in, double& out,int& s,int& e);
 	bool readFormat(std::string& in, data_t& out);

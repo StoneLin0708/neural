@@ -4,70 +4,96 @@
 #include "sample.hpp"
 
 #define dlearning_rate 0.2
-
+#define node_max 50
 //input
 //hidden weight
 //output
 
+class nlayer{
+public:
+	typedef enum{
+		hidden = 1,
+		output = 0,
+		input = 2
+	}layer_t;
+	//nlayer();
+	nlayer(
+		layer_t type, int n_input, int n_nodes = 0,
+		double (*activation)(double in) = NULL,
+		double (*dactivation)(double in) = NULL);
+
+	arma::mat w; //weight
+	arma::rowvec s; //i*w
+	arma::rowvec o; //s activation
+	arma::rowvec e;
+	arma::rowvec es;
+	arma::rowvec d;
+	arma::mat del;
+	arma::mat dels;
+
+	double (*act)(double in);
+	double (*dact)(double in);
+
+	void show();
+	layer_t type();
+
+	int n_nodes() {return _nodes;};
+	int n_input() {return _input;};
+
+	void random_w(double min, double max);
+
+	bool _init;
+private:
+	void _initialize(
+		layer_t type, int n_input, int n_nodes,
+		double (*act)(double in),
+		double (*dact)(double in) );
+
+	void _initialize_i(int n_input);
+
+	layer_t _type;
+	int _input;
+	int _nodes;
+};
+
 class nn{
 public:
-	nn(int ni,int nh);
+	//nn(int input_number, int hidden_number, int output_number);
+	nn(std::string& path, double (*activation)(double), double (*dactivation)(double));
 	void randomInit();
 
 	bool readSample(std::string& path);
+	bool readnn(std::string& path);
 	void test(); //forward
 	void cal_del(); //calcualte single data error
 	void wupdate(); //update error to weight
 	void clear_dels(); //do after update
-	void train(int iteration);
+	void train();
 
+	void error(int i);
 
-	void showw();
-	void showdw();
-	void showd();
-	void showsd();
-
-	double (*activation)(double in);
-	double (*dactivation)(double in);
+	double (*act)(double in);
+	double (*dact)(double in);
 
 	double learning_rate;
 
 	//matrixs use : size
-	arma::mat input; //input data : input_num+1
-
-	arma::mat hidden; //weight of hidden : input_num+1 hidden_num+1
-	arma::mat hs; //hidden out before activation : input_num
-	arma::mat ho; //hidden out activated : input_num+1
-
-	arma::mat output; //weight of output : hidden_num+1 output_num
-	arma::mat os; //output out before activation : output_num
-	arma::mat oo; //output out activated : output_num
-
-	arma::mat de; //desire output : output_num
+	std::vector<nlayer> layer;
+	arma::rowvec de; //desire output : output_num
 	//train matrix
-
-	arma::mat od; //output_num
-	arma::mat hd; //hidden_num+1
-	arma::mat odel; //hidden_num+1 output_num
-	arma::mat hdel; //input_num+1 hidden_num+1
-
-	arma::mat oerr; //output_num
-	arma::mat oerrs; //output_num
-
-	arma::mat ods; //output_num
-	arma::mat hds; //hidden_num+1
 	arma::mat odels; //hidden_num+1 output_num
-	arma::mat hdels; //input_num+1 hidden_num+1
 
 	sample& getSample();
 	std::vector<double> e;
-	double scale;
+	double normalize_scale;
+	int iteration;
 
 private:
 	int input_num;
-	int hidden_num;
-	int output_num;
 	sample _s;
 
+	bool readLayer(int line, std::string& in);
+	void errString(std::string& line, std::string& str,int s ,int e);
+	bool readFor(int line, std::string& in, const std::string text, bool test=false);
 };
 
