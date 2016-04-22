@@ -11,44 +11,66 @@ nlayer::nlayer(){
 }
 */
 nlayer::nlayer(
-		arma::rowvec& input, layer_t type, int n_nodes,
+		layer_t type, int n_input, int n_nodes,
 		double (*act)(double in),
 		double (*dact)(double in) ){
-	if( input.size() > 1 &&
+	if( type != input &&
+		n_input < node_max &&
+		n_input > 1 &&
 		n_nodes < node_max &&
 		n_nodes > 1 &&
 		act != NULL &&
-		dact != NULL ){
-		_initialize(input,type,n_nodes,act,dact);
+		dact != NULL  ){
+		_type = type;
+		_initialize(type, n_input, n_nodes,
+				act,dact);
+		cout<< "input : " <<_input<<endl;
+		cout<< "nodes : " <<_nodes<<endl;
 		_init = true;
 	}
+	else if(type == input &&
+		n_input < node_max &&
+		n_input > 1){
+		_type = type;
+		_initialize_i(n_input);
+		cout<< "inputl: " <<_nodes<<endl;
+		_init = true;
+		}
 	else{
 		cout<< "fail initialize layer with parameter : " << endl
-			<< " input   : " << endl << input << endl;
-		if(type)
-		cout<< " type    : " << hidden << endl;
-		else
-		cout<< " type    : " << output << endl;
-
-		cout<< " n_nodes : " << n_nodes << endl
+			<< " type    : " << type << endl
+			<< " n_nodes : " << n_input << endl
+			<< " n_nodes : " << n_nodes << endl
 			<< " act     : " << act << endl
 			<< " dact    : " << dact << endl;
 	}
 }
 
 void nlayer::_initialize(
-		arma::rowvec& input, layer_t type, int n_nodes,
+		layer_t type, int n_input, int n_nodes,
 		double (*act)(double in),
 		double (*dact)(double in) ){
-	_input = input.n_cols;
+	_input = n_input;
 	_nodes = n_nodes + type;
-	i = &input;
 	random_w(-0.5, 0.5);
 	s = zeros<rowvec>(_nodes);
 	o = zeros<rowvec>(_nodes);
+	if(type == output){
+		e = zeros<rowvec>(_nodes);
+		es = zeros<rowvec>(_nodes);
+	}
 	d = zeros<rowvec>(_nodes);
 	del = zeros<mat>(_input, _nodes);
 	dels = zeros<mat>(_input, _nodes);
+	this->act = act;
+	this->dact = dact;
+	o(_nodes-1) = 1;
+}
+
+void nlayer::_initialize_i(int n_input){
+	_nodes = n_input+1;
+	o = zeros<rowvec>(_nodes);
+	o(_nodes-1) = 1;
 }
 
 void nlayer::random_w(double min, double max){
@@ -57,11 +79,16 @@ void nlayer::random_w(double min, double max){
 	mmin.fill(min);
 	w += mmin;
 }
-/*
-void nlayer::show(){
 
+void nlayer::show(){
+	cout<< "----------type"<< _type <<"----------" << endl;
+	cout<< "w" << endl << w << endl
+		<< "s" << endl << s << endl
+		<< "o" << endl << o << endl
+		<< "d" << endl << d << endl
+		<< "del" << endl << del << endl
+		<< "dels" << endl << dels << endl;
 }
-*/
 //-------------------------------------------------------------------
 /*
 nn::nn(int input_number, int hidden_number, int output_number){
@@ -95,17 +122,12 @@ nn::nn(int input_number, int hidden_number, int output_number){
 }
 */
 nn::nn(std::string& path, double (*activation)(double), double (*dactivation)(double)){
-	input = zeros<rowvec>(2);
 	act = activation;
 	dact = dactivation;
 	readnn(path);
+	de = zeros<rowvec>(layer[layer.size()-1].n_nodes());
 }
-/*
-void nn::randomInit(){
-	hidden = randu<mat>(input_num+1, hidden_num+1);
-	output = randu<mat>(hidden_num+1, output_num);
-}
-*/
+
 sample& nn::getSample(){
 	return _s;
 }
@@ -120,10 +142,11 @@ bool nn::readSample(std::string& path){
 	}
 };
 
-bool nn::readFor(int line, string& in, const string text){
+bool nn::readFor(int line, string& in, const string text, bool test){
 	int i=0;
 	string tmp;
 	while(in[i] == text[i]){
+		//cout<< in[i] << " : "<< text[i] << endl;
 		if((int)text.size() == i+1){
 			for(int j=in.size()-1; j>=(int)text.size(); --j){
 				tmp.push_back(in[j]);
@@ -132,13 +155,14 @@ bool nn::readFor(int line, string& in, const string text){
 			for(int j=tmp.size()-1; j>=0; --j){
 				in.push_back(tmp[j]);
 			}
-			cout<<" read:" << in << endl;
+			cout<<" read " << text << " : "<< in << endl;
 			return true;
 		}
 		i++;
 	}
+	if(!test)
 	cout<< "nn read fail at " << line
-		<< " : "<< in << endl;
+		<< " : "<< in << " : " << in[i] << " : " << text[i] << endl;
 	return false;
 }
 
@@ -152,7 +176,7 @@ bool nn::readLayer(int line, std::string& in){
 	int s,e;
 	string tmp;
 	nlayer::layer_t type;
-	if(readFor(line, in, "hidden=")){
+	if(readFor(line, in, "hidden=",true)){
 		type = nlayer::hidden;
 	}
 	else if(readFor(line, in, "output=")){
@@ -173,8 +197,9 @@ bool nn::readLayer(int line, std::string& in){
 		errString(in, tmp, s, e);
 		return false;
 	}
-	if((int)layer.size() != atoi(tmp.c_str())-1)
+	if((int)layer.size() != atoi(tmp.c_str()))
 		return false;
+	tmp.clear();
 	s = e+1;
 	e = in.size();
 	if(e == (int)string::npos){
@@ -187,16 +212,15 @@ bool nn::readLayer(int line, std::string& in){
 		errString(in, tmp, s, e);
 		return false;
 	}
-	nlayer* nl;
-	if(layer.size() == 0)
-		nl = new nlayer(input, nlayer::hidden, atoi(tmp.c_str()), act, dact);
-	else
-		nl = new nlayer(layer[layer.size()].o, type, atoi(tmp.c_str()), act, dact);
-	if(!nl->_init){
+
+	nlayer nl(type, layer[layer.size()-1].n_nodes(), atoi(tmp.c_str()), act, dact);
+	if(!nl._init){
 		cout<<"nl init fail line "<<line<<" : "<<in<<endl;
 		return false;
 	}
-	layer.push_back(*nl);
+	else
+		//nl.show();
+	layer.push_back(nl);
 
 	return true;
 }
@@ -212,11 +236,12 @@ bool nn::readnn(std::string& path){
     }
 	int line=0;
     while( fnn >> in ){
+		//cout << "in = " << in << endl;
 		line++;
 		switch(line){
 		case 1:
 			if( readFor(line, in, "sampledata=") ){
-				for(int i=0; i<in.size()-1; ++i)
+				for(int i=0; i<(int)in.size()-1; ++i)
 					in[i] = in[i+1];
 				in.resize(in.size()-2);
 				cout << in << endl;
@@ -264,8 +289,12 @@ bool nn::readnn(std::string& path){
 			break;
 		case 5:
 			if( readFor(line, in, "inputfeature=") ){
-				if(_s.isInt(in))
+				if(_s.isInt(in)){
 					input_num = atoi(in.c_str());
+					layer.push_back(
+							*new nlayer(nlayer::input, input_num) );
+					//layer[0].show();
+				}
 				else{
 					cout<<" data wrong ! "<< line<< " : "<< in<< endl;
 					return false;
@@ -285,85 +314,51 @@ bool nn::readnn(std::string& path){
 	return true;
 }
 
-void nn::showw(){
-	//cout << "hidden" << endl << hidden << endl;
-	//cout << "output" << endl << output << endl;
-
-}
-
-void nn::showdw(){
-	/*
-	cout << "hdel" << endl << hdel << endl;
-	cout << "odel" << endl << odel << endl;
-	*/
-}
-
-void nn::showd(){
-	/*
-	cout << "input.t" << endl << input.t() << endl;
-	cout << "hs" << endl << hs << endl;
-	cout << "ho.t" << endl << ho.t() << endl;
-	cout << "os" << endl << os << endl;
-	cout << "oo.t" << endl << oo.t() << endl;
-	cout << "de.t" << endl << de.t() << endl;
-	*/
-}
-
 void nn::test(){
 	//forward
-	for(int i=0; i<(int)layer.size(); ++i){
-		layer[i].s = *(layer[i].i) * layer[i].w;
-		for(int j=0; j<layer[i].n_nodes()-1; ++j)
+	int nodes;
+	int i;
+	for(i=1; i<(int)layer.size()-1; ++i){
+		layer[i].s = layer[i-1].o * layer[i].w;
+		nodes = layer[i].n_nodes()-1;
+		for(int j=0; j<nodes; ++j){
 			layer[i].o(j) = layer[i].act(layer[i].s(j));
+		}
 	}
+	layer[i].s = layer[i-1].o * layer[i].w;
+	nodes = layer[i].n_nodes();
+	for(int j=0; j<nodes; ++j){
+		layer[i].o(j) = layer[i].act(layer[i].s(j));
+	}
+	//layer[i].show();
 
 }
 
 void nn::clear_dels(){
-	for(int i=0; i<(int)layer.size(); ++i)
+	layer.back().es.zeros();
+	for(int i=1; i<(int)layer.size(); ++i)
 		layer[i].dels.zeros();
 }
 
 void nn::cal_del(){
-	/*
 	//output to hidden
-	for(int i=0; i<output_num; ++i){
-		od(i) = (de(i) - oo(i)) * dactivation(os(i));
-		for(int j=0; j<hidden_num+1; ++j){
-			odel(j,i) =
-				learning_rate * od(i) * ho(j);
-		}
-	}
-	//hidden to input
-	for(int layer;
-	hd.zeros();
-	for(int i=0; i<hidden_num+1; ++i){
-		for(int k=0; k<output_num; ++k){
-			hd(i) += od(k)*output(i,k);
-		}
-		hd(i) *= dactivation(hs(i));
-		for(int j=0; j<input_num+1; ++j)
-		{
-			hdel(j,i) =
-				learning_rate * hd(i) * input(j);
-		}
-	}
-	*/
-	//output to hidden
-	nlayer& o = layer[layer.size()];
+	nlayer& o = layer.back();
 	for(int i=0; i<o.n_nodes(); ++i){
-		o.d(i) = (de(i) - o.o(i)) * o.dact(o.s(i));
-		for(int j=0; j<layer[layer.size()-1].n_nodes(); ++j){
+		o.e(i) = de(i) - o.o(i);
+		o.d(i) = o.e(i) * o.dact(o.s(i));
+		for(int j=0; j<layer[layer.size()-2].n_nodes(); ++j){
 			o.del(j,i) =
-				learning_rate * o.d(i) * layer[layer.size()-1].o(j);
+				learning_rate * o.d(i) * layer[layer.size()-2].o(j);
 		}
 		o.dels += o.del;
+		o.es += o.e;
+		//o.show();
 	}
 	//hidden to input
 	int nodes, nodes_;
-	for(int l = layer.size()-1; l>0; ++l){
+	for(int l = layer.size()-2; l>0; --l){
 		nlayer& nl = layer[l];
-		nlayer& nl_ = layer[l];
+		nlayer& nl_ = layer[l+1];
 		nodes = nl.n_nodes();
 		nodes_= nl_.n_nodes();
 
@@ -376,7 +371,7 @@ void nn::cal_del(){
 			for(int j=0; j<nl.n_input(); ++j)
 			{
 				nl.del(j,i) =
-					learning_rate * nl.d(i) * (*(nl.i))(j);
+					learning_rate * nl.d(i) * layer[l-1].o(j);
 			}
 		}
 		nl.dels += nl.del;
@@ -385,63 +380,51 @@ void nn::cal_del(){
 }
 
 void nn::wupdate(){
-	for(int i=0; i<(int)layer.size(); ++i)
+	for(int i=1; i<(int)layer.size(); ++i)
 	{
 		layer[i].w += layer[i].dels;
+		//layer[i].show();
 	}
 }
 
-void nn::showsd(){
-	/*
-	double sod=0, shd=0;
-	for(int i=0; i<output_num; ++i)
-		sod += abs(ods(i))*1000;
-	for(int i=0; i<hidden_num+1; ++i)
-		shd += abs(hds(i))*1000;
-	cout<< "error sum at output = " << setw(8) << sod
-		<< " at hidden = " << setw(8) << shd << endl;
-	e.push_back(sod);
-	*/
+void nn::error(int i){
+	double errs = 0;
+	for(int j=0; j<layer.back().n_nodes(); ++j){
+		errs+= abs(layer.back().es(j));
+	}
+	system("setterm -cursor off");
+	cout<< '\r'<< "iteration : " <<  setw(7) << i
+		<<" error : " << setw(10) << errs;
+	system("setterm -cursor on");
+	e.push_back(errs);
 }
 
-
-void nn::train(int iteration){
+void nn::train(){
 	int fnum = (int)_s[0].feature.size();
 
 	for(int i=0; i<iteration; ++i){
 		clear_dels();
+		//for(int s=0; s<1; ++s){
 		for(int s=0; s<(int)_s.size(); ++s){
 			//set input
 			//get sample performance is poor,need rework
 			for(int j=0; j<fnum; ++j)
-				input(j) = _s[s].feature[j]*normalize_scale;
+				layer[0].o(j) = _s[s].feature[j]*normalize_scale;
 			//set desire output
 			de.fill(0);
-			de.at( _s[s].l ) = 1;
+			de( _s[s].l ) = 1;
 			//forward
 			test();
 			//back propagation
 			cal_del();
 		}
-/*
-		showw();
-		showd();
-		showdw();
-*/
-		/*
-		if(j%50 == 0){
+		if(i%50 == 0){
 		//if(false){
-			cout << "i = " << setw(5) << i << ' ';
-			showsd();
+			error(i);
 		}
-		*/
 		//finish a iteration, change neural weight
 		wupdate();
 	}
-/*
-	showd();
-	showw();
-	showdw();
-*/
+	cout << endl;
 }
 
