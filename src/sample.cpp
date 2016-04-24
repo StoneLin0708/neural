@@ -1,4 +1,5 @@
 #include "sample.hpp"
+#include "stringCheck.hpp"
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
@@ -19,30 +20,8 @@ unsigned int sample::size(){
 	return _data.size();
 };
 
-bool sample::isInt(std::string& test){
-	istringstream iss(test);
-	int f;
-	iss >> noskipws>> f;
-	return iss.eof() && !iss.fail();
-}
-
-bool sample::isFloat(std::string& test){
-	istringstream iss(test);
-	float f;
-	iss >> noskipws>> f;
-	return iss.eof() && !iss.fail();
-}
-
-void sample::errString(std::string& line, std::string& str,
-		int s ,int e){
-	cout<< " sample error in line  \"" << line << "\""<< endl
-		<< "  at character " << s << " to " << e
-		<< " \""<< str << "\""<< endl;
-}
-
 bool sample::readFeature(std::string& in, double& out,
 		int& s,int& e){
-
 	string tmp;
 
 	e = in.find(',',s);
@@ -56,10 +35,9 @@ bool sample::readFeature(std::string& in, double& out,
 		tmp.push_back( in[i]);
 	}
 	//cout << "in " << in << " s= " << s << " e= " << e << " : " << tmp << endl;
-	if( !isFloat(tmp) ){
-		errString(in,tmp,s,e);
+	if( !isFloat(tmp) )
 		return false;
-	}
+
 	out = (double)atof( tmp.c_str() );
 	return true;
 }
@@ -75,10 +53,9 @@ bool sample::readFormat(std::string& in,data_t& out){
 	for(int i=0; i<e; ++i){
 		stmp.push_back( in[i]);
 	}
-	if( !isInt(stmp) ){
-		errString(in,stmp,s,e);
+	if( !isInt(stmp) )
 		return false;
-	}
+
 	out.l = atoi( stmp.c_str() );
 	stmp.clear();
 	f = 0;

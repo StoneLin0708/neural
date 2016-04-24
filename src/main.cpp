@@ -123,7 +123,7 @@ int main(int argc,char* argv[]){
 	}
 	string path = argv[1];
 	nn n(path,logistic,dlogistic);
-
+	//return 0;
 	n.train();
 
 	drawError(n,n.iteration,"error");

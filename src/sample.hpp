@@ -2,14 +2,6 @@
 #include <vector>
 #include <string>
 
-/*
-typedef struct data_t{
-	int l;
-	float x;
-	float y;
-}data_t;
-*/
-
 class data_t{
 public:
 	int l;
@@ -32,13 +24,9 @@ public:
 
 	void list();
 
-	bool isInt(std::string& test);
-	bool isFloat(std::string& test);
-
 private:
 	data_v _data;
 	std::string _path;
-	void errString(std::string& line, std::string& str,int s ,int e);
 	bool readFeature(std::string& in, double& out,int& s,int& e);
 	bool readFormat(std::string& in, data_t& out);
 

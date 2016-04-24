@@ -10,7 +10,7 @@ RELCFLAGS = -o3
 #
 #project files
 #
-SRCS = main.cpp sample.cpp neural.cpp
+SRCS = main.cpp sample.cpp neural.cpp stringCheck.cpp
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural

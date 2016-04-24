@@ -1,4 +1,6 @@
 #include "neural.hpp"
+#include "stringCheck.hpp"
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -24,8 +26,8 @@ nlayer::nlayer(
 		_type = type;
 		_initialize(type, n_input, n_nodes,
 				act,dact);
-		cout<< "input : " <<_input<<endl;
-		cout<< "nodes : " <<_nodes<<endl;
+		//cout<< "input : " <<_input<<endl;
+		//cout<< "nodes : " <<_nodes<<endl;
 		_init = true;
 	}
 	else if(type == input &&
@@ -33,7 +35,7 @@ nlayer::nlayer(
 		n_input > 1){
 		_type = type;
 		_initialize_i(n_input);
-		cout<< "inputl: " <<_nodes<<endl;
+		//cout<< "inputl: " <<_nodes<<endl;
 		_init = true;
 		}
 	else{
@@ -138,7 +140,7 @@ sample& nn::getSample(){
 
 bool nn::readSample(std::string& path){
 	if( _s.read(path.c_str()) ){
-		_s.list();
+		//_s.list();
 		return true;
 	}
 	else{
@@ -146,84 +148,45 @@ bool nn::readSample(std::string& path){
 	}
 };
 
-bool nn::readFor(int line, string& in, const string text, bool test){
-	int i=0;
-	string tmp;
-	while(in[i] == text[i]){
-		//cout<< in[i] << " : "<< text[i] << endl;
-		if((int)text.size() == i+1){
-			for(int j=in.size()-1; j>=(int)text.size(); --j){
-				tmp.push_back(in[j]);
-			}
-			in.clear();
-			for(int j=tmp.size()-1; j>=0; --j){
-				in.push_back(tmp[j]);
-			}
-			cout<<" read " << text << " : "<< in << endl;
-			return true;
-		}
-		i++;
-	}
-	if(!test)
-	cout<< "nn read fail at " << line
-		<< " : "<< in << " : " << in[i] << " : " << text[i] << endl;
-	return false;
-}
-
-void nn::errString(std::string& line, std::string& str, int s ,int e){
-	cout<< " neural error in line  \"" << line << "\""<< endl
-		<< "  at character " << s << " to " << e
-		<< " \""<< str << "\""<< endl;
-}
-
-bool nn::readLayer(int line, std::string& in){
-	int s,e;
-	string tmp;
+bool nn::readLayer(std::string& in){
+	int nodes;
+	string out;
 	nlayer::layer_t type;
-	if(readFor(line, in, "hidden=",true)){
+
+	if(readFor("hidden=",in,out)){
 		type = nlayer::hidden;
 	}
-	else if(readFor(line, in, "output=")){
+	else if(readFor("output=",in,out)){
 		type = nlayer::output;
 	}
-	else
-		return false;
-
-	s = 0;
-	e = in.find(',',s);
-	if(e == (int)string::npos){
-		errString(in, tmp, s, (int)in.size());
-		return false;
-	}
-	for(int i=s; i<e; ++i)
-		tmp.push_back(in[i]);
-	if(!_s.isInt(tmp)){
-		errString(in, tmp, s, e);
-		return false;
-	}
-	if((int)layer.size() != atoi(tmp.c_str()))
-		return false;
-	tmp.clear();
-	s = e+1;
-	e = in.size();
-	if(e == (int)string::npos){
-		errString(in, tmp, s, (int)in.size());
-		return false;
-	}
-	for(int i=s; i<e; ++i)
-		tmp.push_back(in[i]);
-	if(!_s.isInt(tmp)){
-		errString(in, tmp, s, e);
+	else{
+		errorString(" error layer type : ", out, "output= || hidden=");
 		return false;
 	}
 
-	nlayer nl(type, layer[layer.size()-1].n_nodes(), atoi(tmp.c_str()), act, dact);
-	if(!nl._init){
-		cout<<"nl init fail line "<<line<<" : "<<in<<endl;
+	vector<string> sout = split(out,',');
+
+	if( sout.size() != 2 ){
+		errorString(" error layer argument : ", out,
+				"layer number, node number");
 		return false;
 	}
-	else
-		//nl.show();
+
+	if(!isInt(sout[0]))
+		return false;
+	if( (int)layer.size() != atoi(sout[0].c_str()) ){
+		errorString(" error layer : ", sout[0], "");
+		return false;
+	}
+
+	if(!isInt(sout[1]))
+		return false;
+	nodes = atoi(sout[1].c_str());
+
+	nlayer nl(type, layer[layer.size()-1].n_nodes(), nodes, act, dact);
+	if(!nl.success())
+		return false;
+
 	layer.push_back(nl);
 
 	return true;
@@ -232,7 +195,7 @@ bool nn::readLayer(int line, std::string& in){
 bool nn::readnn(std::string& path){
     ifstream fnn;
     fnn.open(path.c_str(), ios::in);
-	string in;
+	string in,out;
 
     if ( fnn.fail() ){
         cout<< "fail to open nn file : " << path<< endl;
@@ -244,78 +207,68 @@ bool nn::readnn(std::string& path){
 		line++;
 		switch(line){
 		case 1:
-			if( readFor(line, in, "sampledata=") ){
-				for(int i=0; i<(int)in.size()-1; ++i)
-					in[i] = in[i+1];
-				in.resize(in.size()-2);
-				cout << in << endl;
-				if(!readSample(in))
-					return false;
-			}
-			else
+			if( !readFor("sampledata=",in,out) )
+				return false;
+			for(int i=0; i<(int)out.size()-1; ++i)
+				out[i] = out[i+1];
+			out.resize(out.size()-2);
+			cout << out << endl;
+			if(!readSample(out))
 				return false;
 			break;
 		case 2:
-			if( readFor(line, in, "samplescale=") ){
-				if(_s.isFloat(in))
-					normalize_scale = (double)atof(in.c_str());
-				else{
-					cout<<" data wrong ! "<< line<< " : "<< in<< endl;
-					return false;
-				}
-			}
-			else
+			if( !readFor("samplescale=",in,out) )
 				return false;
+			if( !isFloat(out))
+				return false;
+			normalize_scale = (double)atof(out.c_str());
 			break;
 		case 3:
-			if( readFor(line, in, "iteration=") ){
-				if(_s.isInt(in))
-					iteration = atoi(in.c_str());
-				else{
-					cout<<" data wrong ! "<< line<< " : "<< in<< endl;
-					return false;
-				}
-			}
-			else
+			if( !readFor("iteration=",in,out) )
 				return false;
+			if( !isInt(out) )
+				return false;
+			iteration = atoi(out.c_str());
 			break;
 		case 4:
-			if( readFor(line, in, "learningrate=") ){
-				if(_s.isFloat(in))
-					learning_rate = (double)atof(in.c_str());
-				else{
-					cout<<" data wrong ! "<< line<< " : "<< in<< endl;
-					return false;
-				}
-			}
-			else
+			if( !readFor("learningrate=",in,out) )
 				return false;
+			if( !isFloat(out) )
+				return false;
+			learning_rate = (double)atof(out.c_str());
 			break;
 		case 5:
-			if( readFor(line, in, "inputfeature=") ){
-				if(_s.isInt(in)){
-					input_num = atoi(in.c_str());
-					layer.push_back(
-							*new nlayer(nlayer::input, input_num) );
-					//layer[0].show();
-				}
-				else{
-					cout<<" data wrong ! "<< line<< " : "<< in<< endl;
-					return false;
-				}
-			}
-			else
+			if( !readFor("inputfeature=",in,out) )
 				return false;
+			if( !isInt(out) )
+				return false;
+			input_num = atoi( out.c_str() );
+			layer.push_back( nlayer(nlayer::input, input_num) );
+			//layer[0].show();
 			break;
 		default :
-			if( !readLayer(line, in) )
+			if( !readLayer(in) )
 				return false;
 			break;
 		}
     }
 
     fnn.close();
+	show();
 	return true;
+}
+
+void nn::show(){
+	int i;
+	cout << "----------" << "-input--" << "----------" << endl;
+	cout << layer[0].o << endl;
+	for(i=1;i<(int)layer.size()-1;++i){
+	cout << "----------" << "hidden"<<setw(2)<< i << "----------" << endl;
+	cout << layer[i].w << endl;
+	}
+	cout << "----------" << "-output-" << "----------" << endl;
+	cout << layer[i].w << endl;
+	cout << "----------" << "--------" << "----------" << endl;
 }
 
 void nn::test(){
@@ -405,7 +358,7 @@ void nn::error(int i){
 
 void nn::train(){
 	int fnum = (int)_s[0].feature.size();
-
+	int ep = iteration/1000;
 	for(int i=0; i<iteration; ++i){
 		clear_dels();
 		//for(int s=0; s<1; ++s){
@@ -422,7 +375,7 @@ void nn::train(){
 			//back propagation
 			cal_del();
 		}
-		if(i%50 == 0){
+		if(i%ep == 0){
 		//if(false){
 			error(i);
 		}

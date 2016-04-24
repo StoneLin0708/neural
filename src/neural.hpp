@@ -41,8 +41,7 @@ public:
 	int n_input() {return _input;};
 
 	void random_w(double min, double max);
-
-	bool _init;
+	bool success(){return _init;};
 private:
 	void _initialize(
 		layer_t type, int n_input, int n_nodes,
@@ -50,6 +49,8 @@ private:
 		double (*dact)(double in) );
 
 	void _initialize_i(int n_input);
+
+	bool _init;
 
 	layer_t _type;
 	int _input;
@@ -71,6 +72,7 @@ public:
 	void train();
 
 	void error(int i);
+	void show();
 
 	double (*act)(double in);
 	double (*dact)(double in);
@@ -92,8 +94,6 @@ private:
 	int input_num;
 	sample _s;
 
-	bool readLayer(int line, std::string& in);
-	void errString(std::string& line, std::string& str,int s ,int e);
-	bool readFor(int line, std::string& in, const std::string text, bool test=false);
+	bool readLayer(std::string& in);
 };
 
