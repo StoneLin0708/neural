@@ -1,13 +1,11 @@
+#pragma once
 #include <vector>
 #include <armadillo>
 #include <string>
 #include "sample.hpp"
 
 #define dlearning_rate 0.2
-#define node_max 50
-//input
-//hidden weight
-//output
+#define node_max 100
 
 class nlayer{
 public:
@@ -22,25 +20,27 @@ public:
 		double (*activation)(double in) = NULL,
 		double (*dactivation)(double in) = NULL);
 
-	arma::mat w; //weight
-	arma::rowvec s; //i*w
-	arma::rowvec o; //s activation
-	arma::rowvec e;
-	arma::rowvec es;
-	arma::rowvec d;
-	arma::mat del;
-	arma::mat dels;
+	arma::mat w;     // weight
+	arma::rowvec s;  // input*weight
+	arma::rowvec o;  // output : o =activation(s)
+	arma::rowvec e;  // error  : desire output - o
+	arma::rowvec es; // error summation : error in a iteration
+	arma::rowvec d;  // d = (higher layer) d * activation'(s)
+	arma::mat del;   // del = learning rate * d * (lower layer) o
+	arma::mat dels;a // del summation : del in a iteration
 
-	double (*act)(double in);
-	double (*dact)(double in);
+	double (*act)(double in); //activation()
+	double (*dact)(double in); //activation'()
 
 	void show();
-	layer_t type();
 
+
+	void random_w(double min, double max); //random weight
+
+	layer_t type(){return _type;};
 	int n_nodes() {return _nodes;};
 	int n_input() {return _input;};
 
-	void random_w(double min, double max);
 	bool success(){return _init;};
 private:
 	void _initialize(
@@ -89,8 +89,9 @@ public:
 	std::vector<double> e;
 	double normalize_scale;
 	int iteration;
-
+	bool success(){return _init;};
 private:
+	bool _init;
 	int input_num;
 	sample _s;
 

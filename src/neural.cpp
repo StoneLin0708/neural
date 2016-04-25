@@ -94,43 +94,17 @@ void nlayer::show(){
 //-------------------------------------------------------------------
 /*
 nn::nn(int input_number, int hidden_number, int output_number){
-	input_num = input_number;
-	hidden_num = hidden_number;
-	output_num = output_number;
-	input = zeros(input_num+1);
-
 	randomInit(); //random hidden & output weight
-
-	hs = zeros(hidden_num); //hidden out
-	ho = zeros(hidden_num+1); //hidden activated
-
-	os = zeros(output_num); //output out
-	oo = zeros(output_num); //output activated
-	de = zeros(output_num); //output activated
-
-	input.at(input_num) = 1; //bias
-	ho.at(hidden_num) = 1; //bias
-
-	hdel = zeros(input_num+1, hidden_num+1); //hidden delta
-	odel = zeros(hidden_num+1, output_num); //output delta
-	od = zeros(output_num);
-	hd = zeros(hidden_num+1);
-	hdels = zeros(input_num+1, hidden_num+1); //hidden delta
-	odels = zeros(hidden_num+1, output_num); //output delta
-	ods = zeros(output_num);
-	hds = zeros(hidden_num+1);
-
-	oerr = zeros(output_num);
-	oerrs = zeros(output_num);
-
 	learning_rate = dlearning_rate;
 	normalize_scale = 1.0;
 }
 */
 nn::nn(std::string& path, double (*activation)(double), double (*dactivation)(double)){
+	_init = true;
 	act = activation;
 	dact = dactivation;
-	readnn(path);
+	if( !readnn(path) )
+		_init = false;
 	de = zeros<rowvec>(layer[layer.size()-1].n_nodes());
 }
 
@@ -160,14 +134,14 @@ bool nn::readLayer(std::string& in){
 		type = nlayer::output;
 	}
 	else{
-		errorString(" error layer type : ", out, "output= || hidden=");
+		errorString(" error layer type ", in, "output= || hidden=");
 		return false;
 	}
 
 	vector<string> sout = split(out,',');
 
 	if( sout.size() != 2 ){
-		errorString(" error layer argument : ", out,
+		errorString(" error layer argument ", out,
 				"layer number, node number");
 		return false;
 	}
@@ -175,7 +149,7 @@ bool nn::readLayer(std::string& in){
 	if(!isInt(sout[0]))
 		return false;
 	if( (int)layer.size() != atoi(sout[0].c_str()) ){
-		errorString(" error layer : ", sout[0], "");
+		errorString(" error layer ", sout[0], "");
 		return false;
 	}
 
@@ -254,6 +228,17 @@ bool nn::readnn(std::string& path){
     }
 
     fnn.close();
+	if( layer.back().type() != nlayer::output){
+		cout << "nn initialize fail : no output layer" << endl;
+		return false;
+	}
+	for(int i=1; i<(int)layer.size()-1; ++i){
+		if(layer[i].type() != nlayer::hidden){
+			cout << "nn initialize fail : output layer more than one" << endl;
+			return false;
+		}
+	}
+
 	show();
 	return true;
 }
@@ -261,13 +246,17 @@ bool nn::readnn(std::string& path){
 void nn::show(){
 	int i;
 	cout << "----------" << "-input--" << "----------" << endl;
-	cout << layer[0].o << endl;
+	cout<< " input feature : "<< layer[0].o.n_cols-1
+		<< " +1 bias" << endl;
 	for(i=1;i<(int)layer.size()-1;++i){
 	cout << "----------" << "hidden"<<setw(2)<< i << "----------" << endl;
-	cout << layer[i].w << endl;
+	cout<< " input : "<< layer[i].w.n_rows
+		<< " nodes : "<< layer[i].w.n_cols << endl;
 	}
 	cout << "----------" << "-output-" << "----------" << endl;
-	cout << layer[i].w << endl;
+	cout<< " input : "<< layer[i].w.n_rows
+		<< " nodes : "<< layer[i].w.n_cols << endl;
+
 	cout << "----------" << "--------" << "----------" << endl;
 }
 
@@ -349,10 +338,8 @@ void nn::error(int i){
 	for(int j=0; j<layer.back().n_nodes(); ++j){
 		errs+= abs(layer.back().es(j));
 	}
-	system("setterm -cursor off");
 	cout<< '\r'<< "iteration : " <<  setw(7) << i
 		<<" error : " << setw(10) << errs;
-	system("setterm -cursor on");
 	e.push_back(errs);
 }
 

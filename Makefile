@@ -3,14 +3,14 @@
 #
 CC = g++
 
-CFLAGS = -Wall -Wextra `pkg-config --cflags opencv`
+CFLAGS = -Wall -Wextra -fopenmp `pkg-config --cflags opencv`
 DBGCFLAGS = -DDEBUG -g
 RELCFLAGS = -o3
 
 #
 #project files
 #
-SRCS = main.cpp sample.cpp neural.cpp stringCheck.cpp
+SRCS = main.cpp sample.cpp neural.cpp plot.cpp stringCheck.cpp
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural
