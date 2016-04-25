@@ -1,8 +1,0 @@
-listsample=0
-sampledata="data/s2"
-samplescale=0.1
-iteration=800000
-learningrate=0.5
-inputfeature=2
-hidden=1,10
-output=2,2

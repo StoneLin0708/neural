@@ -18,18 +18,15 @@ nlayer::nlayer(
 		double (*dact)(double in) ){
 	if( type != input &&
 		n_input < node_max &&
-		n_input > 1 &&
+		n_input >= 1 &&
 		n_nodes < node_max &&
-		n_nodes > 1 &&
+		n_nodes >= 1 &&
 		act != NULL &&
 		dact != NULL  ){
 		_type = type;
 		_initialize(type, n_input, n_nodes,
 				act,dact);
-		//cout<< "input : " <<_input<<endl;
-		//cout<< "nodes : " <<_nodes<<endl;
-		_init = true;
-	}
+		_init = true; }
 	else if(type == input &&
 		n_input < node_max &&
 		n_input > 1){
@@ -99,22 +96,52 @@ nn::nn(int input_number, int hidden_number, int output_number){
 	normalize_scale = 1.0;
 }
 */
-nn::nn(std::string& path, double (*activation)(double), double (*dactivation)(double)){
+nn::nn(string& path, double (*activation)(double), double (*dactivation)(double)){
 	_init = true;
 	act = activation;
 	dact = dactivation;
 	if( !readnn(path) )
 		_init = false;
-	de = zeros<rowvec>(layer[layer.size()-1].n_nodes());
 }
 
-sample& nn::getSample(){
-	return _s;
-}
+bool nn::readSample(const string& path){
+	sample s;
+	if( s.read(path.c_str()) ){
+		//s.list();
+		n_feature = s.n_feature();
+		n_label = s.n_label();
+		n_sample = s.size();
 
-bool nn::readSample(std::string& path){
-	if( _s.read(path.c_str()) ){
-		//_s.list();
+		if(type == multiOutput){
+			for(int i=0; i<n_sample; ++i){
+				mlabels.push_back( zeros<rowvec>( n_label ) );
+				features.push_back( zeros<rowvec>( n_feature ) );
+				for(int j=0; j<n_label; ++j)
+					mlabels[i](j) = s[i].label[j] * output_scale;
+				for(int j=0; j<n_label; ++j)
+					features[i](j) = s[i].feature[j] * normalize_scale;
+			}
+		}
+		else if(type == singleOutput){
+			if(n_label != 1){
+				cout << " label not single " << endl;
+				return false;
+			}
+			slabels = zeros<rowvec>(n_sample);
+			for(int i=0; i<n_sample; ++i){
+				features.push_back( zeros<rowvec>( n_feature ) );
+				slabels(i) = s[i].label[0] * output_scale;
+				for(int j=0; j<n_feature; ++j)
+					features[i](j)= s[i].feature[j] * normalize_scale;
+			}
+		}
+		/*
+		cout << slabels << endl;
+		for(int i=0; i<mlabels.size(); ++i)
+			cout << mlabels[i] << endl;
+		for(int i=0; i<n_sample; ++i)
+			cout << features[i] << endl;
+			*/
 		return true;
 	}
 	else{
@@ -122,7 +149,7 @@ bool nn::readSample(std::string& path){
 	}
 };
 
-bool nn::readLayer(std::string& in){
+bool nn::readLayer(string& in){
 	int nodes;
 	string out;
 	nlayer::layer_t type;
@@ -166,7 +193,7 @@ bool nn::readLayer(std::string& in){
 	return true;
 }
 
-bool nn::readnn(std::string& path){
+bool nn::readnn(const string& path){
     ifstream fnn;
     fnn.open(path.c_str(), ios::in);
 	string in,out;
@@ -177,48 +204,59 @@ bool nn::readnn(std::string& path){
     }
 	int line=0;
     while( fnn >> in ){
-		//cout << "in = " << in << endl;
+		cout << " readnn : " << in << endl;
 		line++;
 		switch(line){
 		case 1:
-			if( !readFor("sampledata=",in,out) )
+			if( !readFor("sampleType=",in,out) )
 				return false;
-			for(int i=0; i<(int)out.size()-1; ++i)
-				out[i] = out[i+1];
-			out.resize(out.size()-2);
-			cout << out << endl;
-			if(!readSample(out))
+			if( out == "singleOutput" )
+				type = singleOutput;
+			else if( out == "multiOutput")
+				type = multiOutput;
+			else{
+				errorString(" tpye wrong ", out ," singleOutput || multiOutput");
 				return false;
+			}
 			break;
 		case 2:
-			if( !readFor("samplescale=",in,out) )
+			if( !readFor("sampleScale=",in,out) )
 				return false;
 			if( !isFloat(out))
 				return false;
 			normalize_scale = (double)atof(out.c_str());
 			break;
 		case 3:
+			if( !readFor("outputScale=",in,out) )
+				return false;
+			if( !isFloat(out))
+				return false;
+			output_scale = (double)atof(out.c_str());
+			break;
+		case 4:
+			if( !readFor("sampleData=",in,out) )
+				return false;
+			for(int i=0; i<(int)out.size()-1; ++i)
+				out[i] = out[i+1];
+			out.resize(out.size()-2);
+			//cout << out << endl;
+			if(!readSample(out))
+				return false;
+			layer.push_back( nlayer(nlayer::input, n_feature) );
+			break;
+		case 5:
 			if( !readFor("iteration=",in,out) )
 				return false;
 			if( !isInt(out) )
 				return false;
 			iteration = atoi(out.c_str());
 			break;
-		case 4:
-			if( !readFor("learningrate=",in,out) )
+		case 6:
+			if( !readFor("learningRate=",in,out) )
 				return false;
 			if( !isFloat(out) )
 				return false;
 			learning_rate = (double)atof(out.c_str());
-			break;
-		case 5:
-			if( !readFor("inputfeature=",in,out) )
-				return false;
-			if( !isInt(out) )
-				return false;
-			input_num = atoi( out.c_str() );
-			layer.push_back( nlayer(nlayer::input, input_num) );
-			//layer[0].show();
 			break;
 		default :
 			if( !readLayer(in) )
@@ -260,6 +298,13 @@ void nn::show(){
 	cout << "----------" << "--------" << "----------" << endl;
 }
 
+inline
+void nn::setInput(arma::rowvec &input){
+	for(int i=0; i<n_feature; ++i)
+		layer[0].o(i) = input(i);
+}
+
+inline
 void nn::test(){
 	//forward
 	int nodes;
@@ -280,17 +325,57 @@ void nn::test(){
 
 }
 
+inline
 void nn::clear_dels(){
 	layer.back().es.zeros();
 	for(int i=1; i<(int)layer.size(); ++i)
 		layer[i].dels.zeros();
 }
 
-void nn::cal_del(){
+inline
+void nn::cal_dels(double label){
+	//output to hidden
+	nlayer& o = layer.back();
+	//for(int i=0; i<o.n_nodes(); ++i){
+		o.e(0) = label - o.o(0);
+		o.d(0) = o.e(0) * o.dact(o.s(0));
+		for(int j=0; j<layer[layer.size()-2].n_nodes(); ++j){
+			o.del(j,0) =
+				learning_rate * o.d(0) * layer[layer.size()-2].o(j);
+		}
+		o.dels += o.del;
+		o.es += o.e;
+	//}
+	//hidden to input
+	int nodes, nodes_;
+	for(int l = layer.size()-2; l>0; --l){
+		nlayer& nl = layer[l];
+		nlayer& nl_ = layer[l+1];
+		nodes = nl.n_nodes();
+		nodes_= nl_.n_nodes();
+
+		nl.d.zeros();
+		for(int i=0; i<nodes; ++i){
+			for(int j=0; j<nodes_; ++j){
+				nl.d(i) += nl_.d(j) * nl_.w(i,j);
+			}
+			nl.d(i) *= nl.dact(nl.s(i));
+			for(int j=0; j<nl.n_input(); ++j)
+			{
+				nl.del(j,i) =
+					learning_rate * nl.d(i) * layer[l-1].o(j);
+			}
+		}
+		nl.dels += nl.del;
+	}
+
+}
+inline
+void nn::cal_delm(arma::rowvec &label){
 	//output to hidden
 	nlayer& o = layer.back();
 	for(int i=0; i<o.n_nodes(); ++i){
-		o.e(i) = de(i) - o.o(i);
+		o.e(i) = label(i) - o.o(i);
 		o.d(i) = o.e(i) * o.dact(o.s(i));
 		for(int j=0; j<layer[layer.size()-2].n_nodes(); ++j){
 			o.del(j,i) =
@@ -298,7 +383,6 @@ void nn::cal_del(){
 		}
 		o.dels += o.del;
 		o.es += o.e;
-		//o.show();
 	}
 	//hidden to input
 	int nodes, nodes_;
@@ -325,12 +409,10 @@ void nn::cal_del(){
 
 }
 
+inline
 void nn::wupdate(){
 	for(int i=1; i<(int)layer.size(); ++i)
-	{
 		layer[i].w += layer[i].dels;
-		//layer[i].show();
-	}
 }
 
 void nn::error(int i){
@@ -344,26 +426,33 @@ void nn::error(int i){
 }
 
 void nn::train(){
-	int fnum = (int)_s[0].feature.size();
 	int ep = iteration/1000;
+	if(ep == 0 ) ep=1;
+	//for(int i=0; i<1; ++i){
 	for(int i=0; i<iteration; ++i){
 		clear_dels();
-		//for(int s=0; s<1; ++s){
-		for(int s=0; s<(int)_s.size(); ++s){
+		//for(int s=0; s<2; ++s){
+		for(int s=0; s<n_sample; ++s){
 			//set input
-			//get sample performance is poor,need rework
-			for(int j=0; j<fnum; ++j)
-				layer[0].o(j) = _s[s].feature[j]*normalize_scale;
-			//set desire output
-			de.fill(0);
-			de( _s[s].l ) = 1;
+			setInput( features[s] );
+			//cout << layer[0].o << endl;
 			//forward
 			test();
+			//cout << layer[2].o << endl;
 			//back propagation
-			cal_del();
+			if(type == singleOutput)
+				cal_dels(slabels[s]);
+			else
+				cal_delm(mlabels[s]);
+			/*
+			cout << layer[1].w << endl;
+			cout << layer[1].del << endl;
+			cout << layer[2].w << endl;
+			cout << layer[2].del << endl;
+			*/
 		}
-		if(i%ep == 0){
 		//if(false){
+		if( i%ep == 0){
 			error(i);
 		}
 		//finish a iteration, change neural weight

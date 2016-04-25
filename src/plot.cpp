@@ -28,9 +28,9 @@ double drawResult(nn& n,string title,double scale)
 			n.layer[0].o(0) = x*scale;
 			n.layer[0].o(1) = y*scale;
 			n.test();
-			if(n.layer.back().o(0) >= 0.99)
+			if(n.layer.back().o[0] <= 0.01)
 				label = 0;
-			else if(n.layer.back().o[1] >= 0.99)
+			else if(n.layer.back().o(0) >= 0.99)
 				label = 1;
 			else
 				label = 2;
@@ -46,13 +46,12 @@ double drawResult(nn& n,string title,double scale)
 				gr.Plot(xdat, ydat,flag);
 		}
 	}
-	sample& sample = n.getSample();
 	flag[1] = '+';
 	flag[3] = '4';
-	for(int i=0; i<(int)sample.size(); i++){
-		xdat.a[0] = sample[i].feature[0];
-		ydat.a[0] = sample[i].feature[1];
-		switch((int)sample[i].l){
+	for(int i=0; i<n.n_sample; ++i){
+		xdat.a[0] = n.features[i](0)/n.normalize_scale;
+		ydat.a[0] = n.features[i](1)/n.normalize_scale;
+		switch((int)n.slabels(i)){
 			case 0:
 				flag[0] = 'R';
 				break;

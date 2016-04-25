@@ -9,69 +9,63 @@
 using namespace std;
 
 sample::sample(){
-
+	_nlabel = 0;
+	_nfeature = 0;
 }
 
-data_t& sample::operator[](int i){
-	return _data[i];
-};
-
-unsigned int sample::size(){
-	return _data.size();
-};
-
-bool sample::readFeature(std::string& in, double& out,
-		int& s,int& e){
-	string tmp;
-
-	e = in.find(',',s);
-	if(e == string::npos){
-		e = in.find(')',s);
-		if(e == string::npos){
-			return false;
-		}
-	}
-	for(int i=s; i<e; i++){
-		tmp.push_back( in[i]);
-	}
-	//cout << "in " << in << " s= " << s << " e= " << e << " : " << tmp << endl;
-	if( !isFloat(tmp) )
-		return false;
-
-	out = (double)atof( tmp.c_str() );
-	return true;
-}
-
-bool sample::readFormat(std::string& in,data_t& out){
-	int s,e,f;
-	string stmp;
-	double dtmp;
-
+bool sample::readFormat(const string& in, data_t& out){
+	out.label.clear();
 	out.feature.clear();
-	s = 0;
-	e = in.find(':', s);
-	for(int i=0; i<e; ++i){
-		stmp.push_back( in[i]);
-	}
-	if( !isInt(stmp) )
+	vector<string> lf = split(in,':');
+	if( lf.size() != 2){
+		errorString(" sample format error ",in,
+		" ex. label0,label1,...,labelN:feature0,feature1,..., featureN"
+		);
 		return false;
+	}
+	vector<string> l = split(lf[0],',');
+	if( l.size() == 0){
+		errorString(" sample error ", in," no label");
+		return false;
+	}
+	else if( _nlabel == 0)
+		_nlabel = l.size();
+	else if( l.size() != _nlabel ){
+		errorString(" sample error ", in," label number not equal");
+		return false;
+	}
 
-	out.l = atoi( stmp.c_str() );
-	stmp.clear();
-	f = 0;
-	s = e+2;
-	while(readFeature(in, dtmp, s, e)){
-		s = e+1;
-		out.feature.push_back(dtmp);
-		++f;
+	vector<string> f = split(lf[1],',');
+	if( f.size() == 0){
+		errorString(" sample error ", in," no feature");
+		return false;
+	}
+	else if( _nfeature == 0){
+		_nfeature = f.size();
+	}
+	else if( f.size() != _nfeature ){
+		errorString(" sample error ", in," feature number not equal");
+		return false;
+	}
+
+	for(int i = 0; i<_nlabel; ++i){
+		if( !isDouble( l[i] ))
+			return false;
+		out.label.push_back( atof(l[i].c_str()) );
+	}
+
+	for(int i = 0; i<_nfeature; ++i){
+		if( !isDouble( f[i] ))
+			return false;
+		out.feature.push_back( atof(f[i].c_str()) );
 	}
 
 	return true;
 }
 
-bool sample::read(const char* path){
+bool sample::read(const string path){
     ifstream sample_f;
-    sample_f.open(path, ios::in);
+    sample_f.open(path.c_str(), ios::in);
 	string in;
 	data_t tmp;
 
@@ -97,16 +91,17 @@ void sample::clear(){
 }
 
 void sample::list(){
-	cout << "[  ";
-	for(int i=0; i<(int)_data[0].feature.size(); i++)
-		cout<< setw(4) << i << " ,";
-	cout<< "    l ]" << endl;
+	cout<< " label : " << _nlabel
+		<< " feature : " << _nfeature
+		<< " sample : " << size() << endl;
 
 	for(int i=0; i<(int)_data.size(); i++){
 		cout<< "[ ";
-		for(int j=0; j<(int)_data[0].feature.size(); j++)
+		for(int j=0; j< (int)_nlabel; j++)
+			cout<< setw(5) << _data[i].label[j] << " ,";
+		for(int j=0; j<(int)_nfeature; j++)
 			cout<< setw(5) << _data[i].feature[j] << " ,";
-		cout<< setw(3) << _data[i].l << " ]"  << endl;
+		cout<< " ]"  << endl;
 	}
 }
 

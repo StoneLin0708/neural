@@ -32,23 +32,25 @@ int main(int argc,char* argv[]){
 	string path = argv[1];
 	nn n(path,logistic,dlogistic);
 	if(!n.success()) return -2;
+
 	double t0 = omp_get_wtime();
 	n.train();
+	//return 0;
 	cout<< " train finish in "
 		<< omp_get_wtime() - t0
 		<< " sec" << endl;
 
 	drawError(n,n.iteration,"error");
 
-	//return 0;
-
 	cv::Mat e = imread("e.png");
 	imshow("e",e);
 
-	if(n.getSample()[0].feature.size() > 2){
+	//onlt draw two feature result
+	if(n.type != nn::singleOutput || n.n_feature != 2){
 		waitKey(0);
 		return 0;
 	}
+
 	char s[100];
 	snprintf(s,100,"result i =%d lr=%f",n.iteration, n.learning_rate);
 

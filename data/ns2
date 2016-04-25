@@ -1,9 +1,10 @@
-sampledata="data/s2"
-samplescale=0.1
-iteration=120000
-learningrate=0.3
-inputfeature=2
-hidden=1,15
+sampleType=singleOutput
+sampleScale=0.1
+outputScale=1
+sampleData="data/s2"
+iteration=800000
+learningRate=0.3
+hidden=1,5
 hidden=2,5
 hidden=3,5
-output=4,2
+output=4,1

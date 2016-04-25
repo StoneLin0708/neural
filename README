@@ -2,11 +2,12 @@ neural network practice
 
  nn file format
 line
-  1 sampledata="path"  //path for training sample
-  2 samplescale=float  //training input = sample * scamplescale
+  1 smapleType=        //singleOutput multiOutput
+  2 sampleScale=float  //training input = sample * scamplescale
+  3 outputScale=float  //training label scale
+  1 sampleData="path"  //path for training sample
   3 iteration=int
-  4 learningrate=float
-  5 inputfeature=int
+  4 learningRate=float
   6 hidden=1,numberOfNode
         .
         .
@@ -15,4 +16,4 @@ line
     output=n+1,2       //can only set 2 now
 
  sample file format
-label:(feature0,feature1,.....,featureN) //label only 0 or 1 now
+label0,label1,...,labelN:feature0,feature1,.....,featureN //label can set float number

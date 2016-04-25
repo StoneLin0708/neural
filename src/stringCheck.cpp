@@ -16,7 +16,7 @@ bool isInt(const string &testString, bool errmsg){
 	bool r = iss.eof() && !iss.fail();
 	if(r) return true;
 	if(errmsg)
-		errorString(" error data type:\"",testString,"\" not a int");
+		errorString(" error data type \"",testString,"\" not a int");
 	return false;
 }
 
@@ -27,7 +27,18 @@ bool isFloat(const string &testString, bool errmsg){
 	bool r = iss.eof() && !iss.fail();
 	if(r) return true;
 	if(errmsg)
-		errorString(" error data type:\"",testString,"\" not a float");
+		errorString(" error data type \"",testString,"\" not a float");
+	return false;
+}
+
+bool isDouble(const string &testString, bool errmsg){
+	istringstream iss(testString);
+	double f;
+	iss >> noskipws>> f;
+	bool r = iss.eof() && !iss.fail();
+	if(r) return true;
+	if(errmsg)
+		errorString(" error data type \"",testString,"\" not a double");
 	return false;
 }
 
