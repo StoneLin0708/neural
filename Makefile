@@ -10,14 +10,14 @@ RELCFLAGS = -o3
 #
 #project files
 #
-SRCS = main.cpp sample.cpp neural.cpp plot.cpp stringCheck.cpp
+SRCS = main.cpp sample.cpp neural.cpp neuralLayer.cpp plot.cpp stringCheck.cpp nnio.cpp algorithm.cpp
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural
 #
 #include files
-#
-LIB = -lmgl `pkg-config --libs opencv`
+
+LIB = -larmadillo -lmgl `pkg-config --libs opencv`
 
 #
 #build settings

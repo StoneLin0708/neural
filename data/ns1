@@ -1,16 +1,14 @@
-###input_sample_setting###
 sampleType=classification
 
-sampleData="data/test/s2"
+sampleData="data/test/s1"
 
 samplingType=all
 testType=all
-testStep=0
 
-iteration=100000
-learningRate=0.1
+iteration=800000
+learningRate=0.01
 normalizeMethod=1
 defaultActivation=sigmoid
 
-hidden=1,15
+hidden=1,5
 output=1

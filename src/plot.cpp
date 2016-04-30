@@ -5,7 +5,7 @@
 
 using namespace std;
 
-double drawResult(nn& n,string title,double scale)
+double drawResult(nn& n,string title)
 {
 	const int size = 10;
 	mglGraph gr;
@@ -25,8 +25,12 @@ double drawResult(nn& n,string title,double scale)
 		for(double y=0; y<size; y+=0.1){
 			xdat.a[0] = x;
 			ydat.a[0] = y;
-			n.layer[0].o(0) = x*scale;
-			n.layer[0].o(1) = y*scale;
+			n.layer[0].o(0) =
+				(x-n.getFNormParam().average(0))*
+				n.getFNormParam().scale(0);
+			n.layer[0].o(1) =
+				(y-n.getFNormParam().average(1))*
+				n.getFNormParam().scale(1);
 			n.test();
 			if(n.layer.back().o[0] <= 0.01)
 				label = 0;
@@ -48,10 +52,14 @@ double drawResult(nn& n,string title,double scale)
 	}
 	flag[1] = '+';
 	flag[3] = '4';
-	for(int i=0; i<n.n_sample; ++i){
-		xdat.a[0] = n.features[i](0)/n.normalize_scale;
-		ydat.a[0] = n.features[i](1)/n.normalize_scale;
-		switch((int)n.slabels(i)){
+	for(int i=0; i<n.n_sample(); ++i){
+		xdat.a[0] =
+			n.features[i](0)/n.getFNormParam().scale(0) +
+			n.getFNormParam().average(0);
+		ydat.a[0] =
+			n.features[i](1)/n.getFNormParam().scale(1) +
+			n.getFNormParam().average(1);
+		switch((int)n.outputs(i)){
 			case 0:
 				flag[0] = 'R';
 				break;
@@ -61,7 +69,7 @@ double drawResult(nn& n,string title,double scale)
 		}
 		gr.Plot(xdat, ydat,flag);
 	}
-	gr.WritePNG("r.png");
+	gr.WritePNG((n.getParam().sampleData+"_r.png").c_str());
 	return 0;
 }
 
@@ -70,7 +78,7 @@ double drawError(nn& n, int iteration, string title)
 	mglGraph gr;
 	gr.SetSize(800,600);
 	gr.SetRanges(0,iteration,
-			0.001,*max_element(n.e.begin(),n.e.end())*10 );
+			0.00001,*max_element(n.e.begin(),n.e.end())*10 );
 			//0.1, 100 );
 	gr.SetFunc("","lg(y)");
 	//gr->Grid("!","h=");
@@ -89,7 +97,7 @@ double drawError(nn& n, int iteration, string title)
 		ydat.a[i] = n.e[i];
 	}
 	gr.Plot(xdat, ydat,flag);
-	gr.WritePNG("e.png");
+	gr.WritePNG( (n.getParam().sampleData+"_e.png").c_str());
 	return 0;
 }
 

@@ -1,5 +1,6 @@
 *.swp
 obj/
 neural
-r.png
-e.png
+tools/
+result/
+*.png

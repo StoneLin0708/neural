@@ -15,14 +15,6 @@ using namespace std;
 using namespace cv;
 using namespace arma;
 
-double logistic(double in){
-	return 1/(1+exp(-1*in));
-}
-
-double dlogistic(double in){
-	double re = logistic(in);
-	return re*(1-re);
-}
 
 int main(int argc,char* argv[]){
 	if(argc != 2){
@@ -30,33 +22,42 @@ int main(int argc,char* argv[]){
 		return -1;
 	}
 	string path = argv[1];
-	nn n(path,logistic,dlogistic);
+	//nn n(path,logistic,dlogistic);
+	nn n(path);
 	if(!n.success()) return -2;
 
 	double t0 = omp_get_wtime();
 	n.train();
+	if(n.type() == nn_t::classification)
+		n.testResult();
+	if(n.type() == nn_t::regression)
+		n.testResultRegression();
+	//n.showd();
 	//return 0;
 	cout<< " train finish in "
 		<< omp_get_wtime() - t0
 		<< " sec" << endl;
 
-	drawError(n,n.iteration,"error");
+	drawError(n,n.getParam().iteration,"error");
 
-	cv::Mat e = imread("e.png");
+	cv::Mat e = imread(
+		(n.getParam().sampleData+"_e.png").c_str()
+		);
 	imshow("e",e);
 
 	//onlt draw two feature result
-	if(n.type != nn::singleOutput || n.n_feature != 2){
+	if(n.type() != nn_t::classification || n.n_feature() != 2){
 		waitKey(0);
 		return 0;
 	}
 
 	char s[100];
-	snprintf(s,100,"result i =%d lr=%f",n.iteration, n.learning_rate);
+	snprintf(s,100,"result i =%d lr=%f",n.getParam().iteration, n.getParam().learningRate);
 
-	drawResult(n,s,n.normalize_scale);
-
-	cv::Mat r = imread("r.png");
+	drawResult(n,s);
+	cv::Mat r = imread(
+		(n.getParam().sampleData+"_r.png").c_str()
+	);
 	imshow("r",r);
 	waitKey(0);
 

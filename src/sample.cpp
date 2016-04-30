@@ -17,13 +17,16 @@ bool sample::readFormat(const string& in, data_t& out){
 	out.label.clear();
 	out.feature.clear();
 	vector<string> lf = split(in,':');
+	vector<string> l;
+	if(!nolable){
+
 	if( lf.size() != 2){
 		errorString(" sample format error ",in,
 		" ex. label0,label1,...,labelN:feature0,feature1,..., featureN"
 		);
 		return false;
 	}
-	vector<string> l = split(lf[0],',');
+	l = split(lf[0],',');
 	if( l.size() == 0){
 		errorString(" sample error ", in," no label");
 		return false;
@@ -35,6 +38,7 @@ bool sample::readFormat(const string& in, data_t& out){
 		return false;
 	}
 
+	}
 	vector<string> f = split(lf[1],',');
 	if( f.size() == 0){
 		errorString(" sample error ", in," no feature");
@@ -63,7 +67,8 @@ bool sample::readFormat(const string& in, data_t& out){
 	return true;
 }
 
-bool sample::read(const string path){
+bool sample::read(const string path,bool nolable){
+	this->nolable = nolable;
     ifstream sample_f;
     sample_f.open(path.c_str(), ios::in);
 	string in;
@@ -80,7 +85,9 @@ bool sample::read(const string path){
 		else
 			return false;
     }
-
+	cout << " output : " << _nlabel;
+	cout << " feature : " << _nfeature;
+	cout << " sample : " << _data.size() << endl;
     sample_f.close();
 	_path = path;
     return true;

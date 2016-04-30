@@ -4,12 +4,81 @@
 #include <armadillo>
 #include <string>
 #include "sample.hpp"
+#include "algorithm.hpp"
 
 #define dlearning_rate 0.2
 #define node_max 100
-
 using std::string;
 using std::vector;
+
+namespace nn_t{
+
+	struct activation{
+		string name;
+		double (*act)(double);
+		double (*dact)(double);
+	};
+
+	typedef enum{
+		empty = 0,
+		classification,
+		regression,
+		timeseries
+	}output_t;
+
+
+	typedef enum {
+		all,
+		number,
+		bunch
+	}sampling_t;
+
+	typedef sampling_t testSample_t;
+
+
+}
+
+struct layerParam{
+	int level;
+	int nodes;
+	string activation;
+	bool operator<(const layerParam &a){
+		return level < a.level;
+	}
+};
+
+struct nnParam{
+	nn_t::output_t sampleType;			/*n 0*/
+	double stopTrainingCost;				/*1*/
+	double outputScale;					/*2*/
+	string sampleData;					/*n 3*/
+
+	int iteration;						/*n 4*/
+	double learningRate;				/*n 5*/
+	vector<struct layerParam> hidden;	/*6*/
+	struct layerParam output;			/*n 7*/
+
+	string normalizeMethod;				/*8*/
+	bool loadWeight;					/*9*/
+	bool saveWeight;					/*10*/
+	string weightPath;					/*11*/
+
+	string weightName;					/*12*/
+	string defaultActivation;			/*n 13*/
+	bool testOnly;						/*14*/
+
+	nn_t::sampling_t samplingType;		/*15*/
+	int samplingStart;					/*15*/
+	int samplingEnd;					/*15*/
+	int samplingNumber;					/*15*/
+
+	nn_t::testSample_t testSampleType;	/*16*/
+	int testSampleStart;				/*16*/
+	int testSampleEnd;					/*16*/
+	int testSampleNumber;				/*16*/
+
+	int testStep;						/*17*/
+};
 
 class nlayer{
 public:
@@ -61,80 +130,76 @@ private:
 	int _nodes;
 };
 
-struct layerParam{
-	nlayer::layer_t type;
-	int level;
-	int nodes;
-	string activation;
-};
-
-struct nnParam{
-	string sampleData;
-	string sampleType;
-	string normalizeMethod;
-	string defaultActivation;
-
-
-	bool loadWeight;
-	bool saveWeight;
-	string loadPath;
-
-	int iteration;
-	double learning_rate;
-};
 
 class nn{
 public:
-	typedef enum{
-		singleOutput = 0,
-		multiOutput = 1
-	}label_t;
-	//nn(int input_number, int hidden_number, int output_number);
-	nn(string& path, double (*activation)(double), double (*dactivation)(double));
-	void randomInit();
+	nn(const string& path);
 
 	bool readSample(const string& path);
-	bool readnn(const string& path);
+	//bool readnn(const string& path);
 
 	void setInput(arma::rowvec &input);
+	void setInputSeries(int s);
 	void test(); //forward
+	void test(int sample); //forward
+	void train();
+
+	void testResult();
+	void testResultRegression();
+	void testResultSeries();
+
+	void error(int &i);
+	void show();
+	void showd();
+
+	vector<nlayer> layer;
+
+	arma::rowvec outputs;
+//	arma::rowvec seriesFeatures;
+	vector<arma::rowvec> features;
+
+	int n_sample(){return _n_sample;};
+
+	int n_feature(){return _n_feature;};
+
+	nn_t::output_t type(){return _type;};
+	bool load(const string &path);
+
+	nnParam& getParam(){return _param;};
+	bool enableParam();
+
+	nn_a::normalizeParam getFNormParam(){return _featureNormParam;};
+	nn_a::normalizeParam getONormParam(){return _outputNormParam;};
+
+	vector<double> e;
+	bool success(){return _init;};
+private:
+	nn_a::normalizeParam _featureNormParam;
+	nn_a::normalizeParam _outputNormParam;
+
+	int getFirstSample();
+	bool getNextSample(int &);
+	int getFirstTestSample();
+	bool getNextTestSample(int &);
+	//bool readLayer(string& in);
+	double (*act)(double);
+	double (*dact)(double);
 	void cal_delm(arma::rowvec &label); //calcualte single data error
 	void cal_dels(double label);
 	void wupdate(); //update error to weight
 	void clear_dels(); //do after update
-	void train();
 
-	void error(int i);
-	void show();
+	int _n_sample;
 
-	double (*act)(double in);
-	double (*dact)(double in);
+	int _n_feature;
 
-	double learning_rate;
-	double normalize_scale;
-	double output_scale;
-	int iteration;
-
-	vector<nlayer> layer;
-
-	//arma::rowvec de; //desire output : output_num
-	//arma::mat label;
-	arma::rowvec slabels;
-	vector<arma::rowvec> mlabels;
-	//arma::mat feature;
-	vector<arma::rowvec> features;
-	int n_feature;
-	int n_label;
-	int n_sample;
-	label_t type;
-	//sample& getSample(){return _s;};
-
-	std::vector<double> e;
-	bool success(){return _init;};
-private:
 	bool _init;
-	//sample _s;
+	nnParam _param;
 
-	bool readLayer(string& in);
+	nn_t::output_t _type;
+
+	int iteration;
+	double learningRate;
+
 };
 

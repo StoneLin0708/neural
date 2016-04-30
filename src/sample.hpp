@@ -17,7 +17,7 @@ class sample{
 public:
 	sample();
 
-	bool read(const string path);
+	bool read(const string path,bool nolable=false);
 	bool save();
 	bool saveTo(const char* path);
 
@@ -34,7 +34,7 @@ public:
 private:
 	size_t _nlabel;
 	size_t _nfeature;
-
+	bool nolable;
 	data_v _data;
 	std::string _path;
 	bool readFormat(const string& in, data_t& out);
