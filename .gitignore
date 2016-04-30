@@ -1,7 +1,6 @@
-*.swp
 obj/
-neural
 tools/
 result/
-*.png
 data/
+*.swp
+neural
