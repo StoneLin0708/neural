@@ -4,3 +4,4 @@ neural
 tools/
 result/
 *.png
+data/
