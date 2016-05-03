@@ -10,7 +10,7 @@ RELCFLAGS = -o3
 #
 #project files
 #
-SRCS = main.cpp sample.cpp neural.cpp neuralLayer.cpp plot.cpp stringCheck.cpp nnio.cpp algorithm.cpp
+SRCS = main.cpp sample.cpp neural.cpp nnLayer.cpp plot.cpp stringCheck.cpp nnio.cpp algorithm.cpp nnfun.cpp nnGetSample.cpp nnLoad.cpp nnInfo.cpp nnTest.cpp
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural

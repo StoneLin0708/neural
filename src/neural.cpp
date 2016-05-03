@@ -1,6 +1,8 @@
 #include "neural.hpp"
 #include "stringCheck.hpp"
+#include "nnfun.hpp"
 #include "nnio.hpp"
+
 #include <time.h>
 #include <iostream>
 #include <iomanip>
@@ -10,374 +12,261 @@
 using namespace std;
 using namespace arma;
 
-double sigmoid(double in){
-	return 1/(1+exp(-1*in));
+nn::nn(nnParam param){
+	_init = true;
+	_param = param;
+	//readnn(path, _param);
+	if(!enableParam())
+		_init = false;
+	show();
+	showParam();
 }
 
-double dsigmoid(double in){
-	double re = sigmoid(in);
-	return re*(1-re);
+inline
+void nn::test(){
+	//input to hidden 0
+	Lhidden[0].sum = Linput.out * Lhidden[0].weight;
+	Lhidden[0].act(Lhidden[0].sum, Lhidden[0].out, Lhidden[0].n_node()-1);
+	//hidden 1 to hidden n
+	for(int i=1; i<(int)Lhidden.size(); ++i){
+		Lhidden[i].sum = Lhidden[i-1].out * Lhidden[i].weight;
+		Lhidden[i].act(Lhidden[i].sum, Lhidden[i].out, Lhidden[i].n_node()-1);
+	}
+	//hidden n to output
+	Loutput.sum = Lhidden.back().out * Loutput.weight;
+	Loutput.act(Loutput.sum, Loutput.out, Loutput.n_node());
 }
+
 /*
-double tanh(double in){
-	return tanh(in);
+inline
+void nn::test(){
+	cout<< "Linput.out " << Linput.out << endl;
+	cout<< "Lhidden0.w " << Lhidden[0].weight << endl;
+	//cout<< "Lhidden0.sum " << Lhidden[0].sum << endl;
+	//input to hidden 0
+	Lhidden[0].sum = Linput.out * Lhidden[0].weight;
+	cout<< "Lhidden0.sum " << Lhidden[0].sum << endl;
+	//cout<< "Lhidden0.out " << Lhidden[0].out << endl;
+	const int nodesi = Lhidden[0].n_node();
+	for(int i=1; i<nodesi; ++i)
+		Lhidden[0].out(i) = Lhidden[0].act(Lhidden[0].sum(i));
+	cout<< "Lhidden0.out " << Lhidden[0].out << endl;
+	//hidden 1 to hidden n
+	for(int i=1; i<(int)Lhidden.size(); ++i){
+		cout << "Lhidden n = " << i << endl;
+		Lhidden[i].sum = Lhidden[i-1].out * Lhidden[i].weight;
+		const int nodesh = Lhidden[i].n_node();
+		for(int j=1; j<nodesh; ++j){
+			Lhidden[i].out(j) = Lhidden[i].act(Lhidden[i].sum(j));
+		}
+	}
+	cout<< "Loutput.w " << Loutput.weight << endl;
+	//cout<< "Loutput.sum " << Loutput.sum << endl;
+	//hidden n to output
+	Loutput.sum = Lhidden.back().out * Loutput.weight;
+	cout<< "Loutput.sum " << Loutput.sum << endl;
+	const int nodeso = Loutput.n_node();
+	for(int i=0; i<nodeso; ++i){
+		Loutput.out(i) = Loutput.act(Loutput.sum(i));
+	}
+	cout<< "Loutput.out " << Loutput.out << endl;
 }
 */
-double dtanh(double in){
-	double re = tanh(in);
-	return 1-re*re;
+
+inline void nn::clear_wupdates(){
+	Loutput.cost.zeros();
+	for(int i=0; i<(int)Lhidden.size(); ++i)
+		Lhidden[i].wupdates.zeros();
+	Loutput.wupdates.zeros();
 }
 
-nn::nn(const string& path){
-	_init = true;
-	act = sigmoid;
-	dact = dsigmoid;
-	if( !load(path) )
-		_init = false;
-}
-
-bool nn::readSample(const string& path){
-	sample s;
-	bool loadsuccess;
-	if(_type == nn_t::timeseries)
-		loadsuccess = s.read(path.c_str(),true);
-	else
-		loadsuccess = s.read(path.c_str());
-	if( loadsuccess ){
-		//s.list();
-		_n_feature = s.n_feature();
-		_n_sample = s.size();
-
-		//if(_type == nn_t::classification){
-		if(true){
-			outputs = zeros<rowvec>(_n_sample);
-			for(int i=0; i<_n_sample; ++i){
-				features.push_back( zeros<rowvec>( _n_feature ) );
-				//outputs(i) = s[i].label[0] * outputScale;
-				outputs(i) = s[i].label[0];
-				for(int j=0; j<_n_feature; ++j)
-					features[i](j)= s[i].feature[j];
-			}
-			nn_a::getNormalizeParam_o(outputs,_outputNormParam);
-			nn_a::normalize_o(outputs,_outputNormParam);
-
-			nn_a::getNormalizeParam(features,_featureNormParam);
-			nn_a::normalize(features,_featureNormParam);
-		}
-		return true;
-	}
-
-	return false;
-}
-
-bool nn::load(const string &path){
-	if(!readnn(path, _param)) return false;
-	if(!enableParam()) return false;
-	show();
-	return true;
-}
-
-bool nn::enableParam(){
-	_type = _param.sampleType;
-
-	iteration = _param.iteration;
-	learningRate = _param.learningRate;
-	if(!readSample(_param.sampleData))
-		return false;
-	if(_param.samplingNumber == -1)
-		_param.samplingNumber = _n_sample;
-
-	if(_param.testSampleNumber == -1)
-		_param.testSampleNumber = _n_sample;
-
-	if(_param.testSampleEnd == -1)
-		_param.testSampleEnd = _n_sample;
-
-	nlayer li(nlayer::input, _n_feature);
-	if( !li.success() ) return false;
-	layer.push_back( li );
-
-	sort(_param.hidden.begin(), _param.hidden.end());
-
-	if( (int)_param.hidden.size() != _param.hidden.back().level )
-		return false;
-	nlayer *lh;
-	for(int i=1; i<=(int)_param.hidden.size(); ++i){
-		if(_param.hidden[i-1].activation == "sigmoid")
-		lh = new nlayer(nlayer::hidden,
-				layer[i-1].o.n_cols,
-				_param.hidden[i-1].nodes,
-				sigmoid, dsigmoid);
-		else if(_param.hidden[i-1].activation == "tanh")
-		lh = new nlayer(nlayer::hidden,
-				layer[i-1].o.n_cols,
-				_param.hidden[i-1].nodes,
-				tanh, dtanh);
-		else if(_param.hidden[i-1].activation == "")
-		lh = new nlayer(nlayer::hidden,
-				layer[i-1].o.n_cols,
-				_param.hidden[i-1].nodes,
-				act, dact);
+inline void nn::bp(){
+	//output to last hidden
+	const int nodeso = Loutput.n_node();
+	//compute delta
+	Loutput.dact( Loutput.sum , Loutput.delta, nodeso);
+	for(int i=0; i<nodeso; ++i)
+		Loutput.delta(i) *= dcost(Loutput.desireOut(i), Loutput.out(i));
+	//compute cost
+	for(int i=0; i<nodeso; ++i)
+		Loutput.cost(i) += cost(Loutput.desireOut(i), Loutput.out(i));
+	//compute wupdate
+	const int nodeht = Lhidden.back().n_node();
+	for(int i=0; i<nodeso; ++i)
+		for(int j=0; j<nodeht; ++j)
+		Loutput.wupdate(j,i) = learningRate * Loutput.delta(i) * Lhidden.back().out(j);
+	Loutput.wupdates -= Loutput.wupdate;
+	//hidden to hidden || hidden to output
+	mat *weightU = &Loutput.weight; //weight upper layer
+	rowvec *deltaU = &Loutput.delta; //delta upper layer
+	rowvec *outD = NULL; //output lower layer
+	int nodesU = nodeso;
+	for(int layer=Lhidden.size()-1; layer>=0; --layer){
+		Lhidden[layer].delta.zeros(); //reset delta
+		if(layer == 0)
+			outD = &Linput.out; //hidden 1 to input
 		else
-			errorString("no such activation",_param.hidden[i-1].activation,"");
-		if(!lh->success()) return false;
-		layer.push_back( *lh );
-	}
+			outD = &Lhidden[layer-1].out; //hidden layer to layer-1
 
-	nlayer oh(nlayer::output, layer[layer.size()-1].o.n_cols, 1, act, dact);
-	if(!oh.success()) return false;
-	layer.push_back( oh );
-	return true;
+		const int nodesh = Lhidden[layer].n_node();
+		for(int i=0; i<nodesh; ++i){
+			//compute summmation of upper layer to this layer delta
+			for(int j=0; j<nodesU; ++j)
+				Lhidden[layer].delta(i) = (*deltaU)(j) * (*weightU)(i,j);
+			//compute delta
+			Lhidden[layer].dact(Lhidden[layer].sum, Lhidden[layer].sum, nodesU);
+			Lhidden[layer].delta(i) *= Lhidden[layer].sum(i);
+			//compute weight
+			const int inputsh = Lhidden[layer].n_input();
+			for(int j=0; j<inputsh; ++j)
+				Lhidden[layer].wupdate(j,i) = learningRate * Lhidden[layer].delta(i) * (*outD)(j);
+		}
+		Lhidden[layer].wupdates -= Lhidden[layer].wupdate;
+		weightU = &Lhidden[layer].weight;
+		deltaU = &Lhidden[layer].delta;
+		nodesU = nodesh;
+	}
 }
 
-void nn::show(){
-	int i;
-	cout << "----------" << "-input--" << "----------" << endl;
-	cout<< " input feature : "<< layer[0].o.n_cols-1
-		<< " +1 bias" << endl;
-	for(i=1;i<(int)layer.size()-1;++i){
-	cout << "----------" << "hidden"<<setw(2)<< i << "----------" << endl;
-	cout<< " input : "<< layer[i].w.n_rows
-		<< " nodes : "<< layer[i].w.n_cols
-		<< " nodes : "<< _param.hidden[i-1].activation << endl;
-	}
-	cout << "----------" << "-output-" << "----------" << endl;
-	cout<< " input : "<< layer[i].w.n_rows
-		<< " nodes : "<< layer[i].w.n_cols << endl;
-
-	cout << "----------" << "--------" << "----------" << endl;
-}
-
-void nn::showd(){
-	int i;
-	cout << "----------" << "-input--" << "----------" << endl;
-	cout<< " input feature : "<< layer[0].o.n_cols-1
-		<< " +1 bias" << endl;
-	for(i=1;i<(int)layer.size()-1;++i){
-	cout << "----------" << "hidden"<<setw(2)<< i << "----------" << endl;
-	cout<< " input : "<< layer[i].w.n_rows
-		<< " nodes : "<< layer[i].w.n_cols << endl
-		<< " weight : " << layer[i].w
-		<< " del : " << layer[i].del
-		<< " o : " << layer[i].o << endl;
-	}
-	cout << "----------" << "-output-" << "----------" << endl;
-	cout<< " input : "<< layer[i].w.n_rows
-		<< " nodes : "<< layer[i].w.n_cols << endl
-		<< " weight : " << layer[i].w
-		<< " del : " << layer[i].del
-		<< " o : " << layer[i].o << endl;
-
-	cout << "----------" << "--------" << "----------" << endl;
-}
-
+/*
 inline
-void nn::setInput(arma::rowvec &input){
-	for(int i=0; i<_n_feature; ++i)
-		layer[0].o(i) = input(i);
-}
+void nn::bp(){
+	//output to last hidden
+	cout<< "Loutput.out " << Loutput.out << endl;
+	cout<< "Loutput.desireOut " << Loutput.desireOut << endl;
+	const int nodeso = Loutput.n_node();
+	for(int i=0; i<nodeso; ++i)
+		Loutput.delta(i) =
+			dcost(Loutput.desireOut(i), Loutput.out(i))
+			* Loutput.dact( Loutput.sum(i) );
+	cout<< "Loutput.delta " << Loutput.delta << endl;
+	for(int i=0; i<nodeso; ++i)
+		Loutput.cost(i) += cost(Loutput.out(i), Loutput.desireOut(i));
+	const int nodeht = Lhidden.back().n_node();
+	for(int i=0; i<nodeso; ++i)
+		for(int j=0; j<nodeht; ++j)
+		Loutput.wupdate(j,i) =
+			learningRate * Loutput.delta(i) * Lhidden.back().out(j);
+	cout<< "Loutput.wupdate " << Loutput.wupdate << endl;
+	Loutput.wupdates -= Loutput.wupdate;
+	cout<< "Loutput.wupdates " << Loutput.wupdates << endl;
 
-inline
-void nn::setInputSeries(int s){
-	for(int i=0; i<_n_feature; ++i)
-		layer[0].o(i) = features[s+i](0);
-}
+	mat *weightU = &Loutput.weight;
+	rowvec *deltaU = &Loutput.delta;
+	rowvec *outD = NULL;
+	int nodesU = nodeso;
+	for(int layer=Lhidden.size()-1; layer>=0; --layer){
+		Lhidden[layer].delta.zeros();
+		if(layer == 0)
+			outD = &Linput.out; //hidden 1 to input
+		else
+			outD = &Lhidden[layer-1].out; //hidden layer to layer-1
 
-int nn::getFirstTestSample(){
-	switch(_param.testSampleType){
-	case nn_t::all :
-			return 0;
-		break;
-	case nn_t::number :
-			return _param.testSampleStart;
-		break;
-	}
-	return -1;
-}
+		cout<< "outD" << *outD ;
 
-inline
-bool nn::getNextTestSample(int &sample){
-	static int counter = _param.testSampleStart+1;
-	static nn_t::testSample_t testSampleType = _param.testSampleType;
-	static int testSampleStart	= _param.testSampleStart;
-	static int testSampleEnd	= _param.testSampleEnd;
-	switch(testSampleType){
-	case nn_t::all :
-		sample = counter;
-		if( counter ==  _n_sample){
-			counter = 1;
-			sample = 0;
-			return false;
+		const int nodesh = Lhidden[layer].n_node();
+		for(int i=0; i<nodesh; ++i){
+			for(int j=0; j<nodesU; ++j)
+				Lhidden[layer].delta(i) = (*deltaU)(j) * (*weightU)(i,j);
+
+		cout<< "Lhidden[" << layer << "].delta " << Lhidden[layer].delta;
+
+			Lhidden[layer].delta(i) *= Lhidden[layer].dact( Lhidden[layer].sum(i) );
+
+		cout<< "Lhidden[" << layer << "].delta " << Lhidden[layer].delta;
+
+			const int inputsh = Lhidden[layer].n_input();
+			for(int j=0; j<inputsh; ++j)
+				Lhidden[layer].wupdate(j,i) = learningRate *Lhidden[layer].delta(i) *(*outD)(j);
+
+		cout<< "Lhidden[" << layer << "].wupdate " << Lhidden[layer].wupdate;
+
 		}
-		++counter;
-		break;
-	case nn_t::number :
-		sample = counter;
-		if( counter == testSampleEnd){
-			counter = testSampleStart;
-			return false;
-		}
-		++counter;
-		break;
+		Lhidden[layer].wupdates -= Lhidden[layer].wupdate;
+		weightU = &Lhidden[layer].weight;
+		deltaU = &Lhidden[layer].delta;
+		nodesU = nodesh;
 	}
-	return true;
 }
+*/
 
-int nn::getFirstSample(){
-	switch(_param.samplingType){
-	case nn_t::all :
-			return 0;
-		break;
-	case nn_t::number :
-			return _param.samplingStart-1;
-		break;
-	case nn_t::bunch :
-			return 0;
-		break;
-	}
-	return -1;
-}
+bool nn::gradientChecking(int sample){
+	if(sample == -1)
+		sample = _n_sample;
+	double delta = 1.0e-4;
+	double errorMax = 1.0e-6;
+	double fw,fwd;
+	int nodes = Loutput.n_node();
+	int inputs = Loutput.n_input();
+	mat *weight = &Loutput.weight;
+	mat *wupdates = &Loutput.wupdates;
+	int layers = 1+Lhidden.size();
 
-inline
-bool nn::getNextSample(int &sample){
-	static int counter = _param.samplingStart;
-	static nn_t::sampling_t samplingType = _param.samplingType;
-	static int samplingStart = _param.samplingStart;
-	static int samplingEnd = _param.samplingEnd;
-	static int samplingNumber = _param.samplingNumber;
-	static int bunch_counter = 1;
-
-	switch(samplingType){
-	case nn_t::all :
-		sample = counter;
-		if( counter ==  _n_sample){
-			counter = 1;
-			sample = 0;
-			return false;
-		}
-		++counter;
-		break; case nn_t::number :
-		sample = counter;
-		if( counter == samplingEnd){
-			counter = samplingStart-1;
-			sample = counter;
-			++counter;
-			return false;
-		}
-		++counter;
-		break;
-	case nn_t::bunch :
-		sample = counter;
-
-		if( counter == _n_sample || counter == samplingEnd){
-			counter = 1;
-			bunch_counter = 1;
-			sample = 0;
-			return false;
-		}
-		if(	counter % samplingNumber == 0){
-			counter = bunch_counter * samplingNumber+1;
-			sample = counter-1;
-			++bunch_counter;
-			return false;
-		}
-		++counter;
-		break;
-	}
-	return true;
-}
-
-void nn::test(){
-	//forward
-	int nodes;
-	int i;
-	for(i=1; i<(int)layer.size()-1; ++i){
-		layer[i].s = layer[i-1].o * layer[i].w;
-		nodes = layer[i].n_nodes()-1;
-		for(int j=0; j<nodes; ++j){
-			layer[i].o(j) = layer[i].act(layer[i].s(j));
-		}
-	}
-	layer[i].s = layer[i-1].o * layer[i].w;
-	nodes = layer[i].n_nodes();
-	for(int j=0; j<nodes; ++j){
-		layer[i].o(j) = layer[i].act(layer[i].s(j));
-	}
-	//layer[i].show();
-}
-
-void nn::test(int sample){
-	setInput(features[sample]);
-	//forward
-	int nodes;
-	int i;
-	for(i=1; i<(int)layer.size()-1; ++i){
-		layer[i].s = layer[i-1].o * layer[i].w;
-		nodes = layer[i].n_nodes()-1;
-		for(int j=0; j<nodes; ++j){
-			layer[i].o(j) = layer[i].act(layer[i].s(j));
-		}
-	}
-	layer[i].s = layer[i-1].o * layer[i].w;
-	nodes = layer[i].n_nodes();
-	for(int j=0; j<nodes; ++j){
-		layer[i].o(j) = layer[i].act(layer[i].s(j));
-	}
-	//layer[i].show();
-}
-
-
-inline
-void nn::clear_dels(){
-	layer.back().es.zeros();
-	for(int i=1; i<(int)layer.size(); ++i)
-		layer[i].dels.zeros();
-}
-
-inline
-void nn::cal_dels(double label){
-	//output to hidden
-	nlayer& o = layer.back();
-	o.e(0) = label - o.o(0);
-	o.d(0) = o.e(0) * o.dact(o.s(0));
-	for(int j=0; j<layer[layer.size()-2].n_nodes(); ++j){
-		o.del(j,0) =
-			learningRate * o.d(0) * layer[layer.size()-2].o(j);
-	}
-	o.dels += o.del;
-	o.es(0) += 0.5*o.e(0)*o.e(0);
-	//hidden to input
-	int nodes, nodes_;
-	for(int l = layer.size()-2; l>0; --l){
-		nlayer& nl = layer[l];
-		nlayer& nl_ = layer[l+1];
-		nodes = nl.n_nodes();
-		nodes_= nl_.n_nodes();
-
-		nl.d.zeros();
+	//for(int l=layers-1; l>=0; --l){
+	for(int l=layers-1; false; --l){
+		if(l == layers-1) cout << "gradient check layer output" << endl;
+		else cout << "gradient check layer hidden [" << l+1 <<']'<<endl;
 		for(int i=0; i<nodes; ++i){
-			for(int j=0; j<nodes_; ++j){
-				nl.d(i) += nl_.d(j) * nl_.w(i,j);
-			}
-			nl.d(i) *= nl.dact(nl.s(i));
-			for(int j=0; j<nl.n_input(); ++j)
-			{
-				nl.del(j,i) =
-					learningRate * nl.d(i) * layer[l-1].o(j);
+			for(int j=0; j<inputs; ++j){
+				clear_wupdates();
+				for(int s=0; s<sample; ++s){
+					Linput.setFeatures(s);
+					Loutput.setOutput(s);
+					test();
+					bp();
+				}
+				fw = -1*( (*wupdates)(j,i)/learningRate)/sample;
+
+				(*weight)(j,i) += delta;
+				fwd = 0;
+				for(int s=0; s<sample; ++s){
+					Linput.setFeatures(s);
+					Loutput.setOutput(s);
+					test();
+					for(int k=0; k<Loutput.n_node(); ++k)
+						fwd += cost(Loutput.desireOut(k), Loutput.out(k));
+				}
+				(*weight)(j,i) -= 2*delta;
+				for(int s=0; s<sample; ++s){
+					Linput.setFeatures(s);
+					Loutput.setOutput(s);
+					test();
+					for(int k=0; k<Loutput.n_node(); ++k)
+						fwd -= cost(Loutput.desireOut(k), Loutput.out(k));
+				}
+				(*weight)(j,i) += delta;
+				fwd /= 2*delta*sample;
+
+				if( abs(fwd - fw) > errorMax ){
+					if(l==layers-1)
+						cout << "gradient check fail at layer output weight("<<j<<","<<i<<")"<<" fw="<< fw <<" fwd="<< fwd<<endl;
+					else
+						cout << "gradient check fail at layer hidden["<< l+1 <<"] weight("<<j<<","<<i<<")"<<" fw="<< fw <<" fwd="<< fwd<<endl;
+					return false;
+				}
 			}
 		}
-		nl.dels += nl.del;
+		if(l>0){
+			nodes = Lhidden[l-1].n_node();
+			inputs = Lhidden[l-1].n_input();
+			weight = &Lhidden[l-1].weight;
+			wupdates = &Lhidden[l-1].wupdates;
+		}
 	}
-}
 
+	cout << "gradient check success "<<endl;
+	return true;
+}
 
 inline
 void nn::wupdate(){
-	static int samplingNumber = _param.samplingNumber;
-	//cout << "samplingNumber " << samplingNumber<<endl;
-	for(int i=1; i<(int)layer.size(); ++i)
-		layer[i].w += layer[i].dels;
-		//layer[i].w += layer[i].dels/samplingNumber;
+	static int trainNumber = _param.trainNumber;
+	//Loutput.weight *= 0.9999;
+	Loutput.weight += Loutput.wupdates/trainNumber;
+	for(int i=0; i<(int)Lhidden.size(); ++i){
+		//Lhidden[i].weight *= 0.9999;
+		Lhidden[i].weight += Lhidden[i].wupdates/trainNumber;
+	}
 }
 
 void nn::error(int &i){
@@ -389,8 +278,8 @@ void nn::error(int &i){
 	bool show = ( ( clock() - last_t ) >= 500000);
 	bool save = ( i%ep == 0 );
 	if(show || save){
-		for(int j=0; j<layer.back().n_nodes(); ++j){
-			errs += layer.back().es(j)/_param.samplingNumber;
+		for(int j=0; j<Loutput.n_node(); ++j){
+			errs += Loutput.cost(j)/_param.trainNumber;
 		}
 		if( abs(errs - last_c) < _param.stopTrainingCost)
 			stop_counter++;
@@ -424,120 +313,27 @@ void nn::train(){
 		*/
 	int s = getFirstSample();
 	for(int i=0; i<iteration; ++i){
-		clear_dels();
+	//for(int i=0; i<2; ++i){
+		clear_wupdates();
 		do{
-			/*
-			showd();
+	/*
+	cout<< "-----------iteration" << i << "-----------" << endl;
+			cout << "sample : " << s;
 			cin.get();
-			*/
-			//forward
-			if( _type == nn_t::timeseries){
-				cout <<"gg"<<i<<":" <<s<< endl;
-				setInputSeries(s);
-				test();
-				cal_dels(features[s+1](0));
-			}
-			else{
-				//cout << i <<":" << s << endl;
-				test( s );
-				cal_dels(outputs[s]);
-			}
-			//back propagation
+	cout<< "-----------forword--------------" << endl;
+	*/
+			Linput.setFeatures(s);
+			test();
+	//cout<< "-----------bp-------------------" << endl;
+			Loutput.setOutput(s);
+			bp();
 		}while(getNextSample(s));
+
 		error(i);
 		wupdate();
-		if(i%1000 ==1000)
-			testResult();
+		//if(i%1000 ==1000)
+			//testResult();
 	}
 	cout << endl;
 }
 
-
-void nn::testResultRegression(){
-	double errors=0, singleError;
-	int s = getFirstTestSample();
-	int step = _param.testStep;
-	if(step == 0)
-		step = _n_sample;
-	int j=0;
-	do{
-		test( s );
-		singleError = 0.5* pow(outputs( s )-layer.back().o(0), 2);
-		errors += singleError;
-		if(j<step)
-			j++;
-		else{
-			cout<< " feature : " << features[s]
-				<< " output : " << layer.back().o(0) << endl
-				<< " desire : " << outputs(s) << endl;
-			cin.get();
-			j=0;
-		}
-	}while(getNextTestSample(s));
-	cout<< " average cost " << errors/_param.testSampleNumber << endl;
-
-}
-
-void nn::testResultSeries(){
-	int s = getFirstTestSample();
-	int step = _param.testStep;
-	double output, real;
-	if(step == 0)
-		step = _n_sample;
-
-	int j=0;
-	do{
-		setInputSeries(s);
-		test();
-		real =
-		( ( features[ s+1 ](0) )
-					 /_featureNormParam.scale(0)		)
-				+_featureNormParam.average(0);
-		output =
-		( ( layer.back().o(0))
-					/_featureNormParam.scale(0)		)
-					+_featureNormParam.average(0);
-		if(j<step)
-			j++;
-		else{
-			cout<< " output : " << output<< " real : " << real<< endl;
-			cin.get();
-			j=0;
-		}
-	}while(getNextTestSample(s));
-
-}
-void nn::testResult(){
-	int s = getFirstTestSample();
-	int step = _param.testStep;
-	int outputClass, realClass;
-	int errors=0;
-	if(step == 0)
-		step = _n_sample;
-
-	int j=0;
-	do{
-		test( s );
-		realClass =
-			round( ( ( outputs( s )-0.5 )
-					 /_outputNormParam.scale(0)		)
-				+_outputNormParam.average(0) );
-		outputClass =
-			round( ( ( layer.back().o(0)-0.5)
-					/_outputNormParam.scale(0)		)
-					+_outputNormParam.average(0));
-		if(outputClass != realClass)
-			errors++;
-		if(j<step)
-			j++;
-		else{
-			cout<< " feature : " << features[s]
-				<< " output : " << layer.back().o(0) << ":"<< outputClass<< endl
-				<< " real : " << outputs(s) <<":"<<realClass<< endl;
-			cin.get();
-			j=0;
-		}
-	}while(getNextTestSample(s));
-	cout<< " all : "<< _param.testSampleNumber <<" error : " << errors << " predict rate "<< (1-(double)errors/_param.testSampleNumber)*100<<'%' << endl;
-
-}

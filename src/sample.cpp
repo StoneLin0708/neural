@@ -20,25 +20,26 @@ bool sample::readFormat(const string& in, data_t& out){
 	vector<string> l;
 	if(!nolable){
 
-	if( lf.size() != 2){
-		errorString(" sample format error ",in,
-		" ex. label0,label1,...,labelN:feature0,feature1,..., featureN"
-		);
-		return false;
-	}
-	l = split(lf[0],',');
-	if( l.size() == 0){
-		errorString(" sample error ", in," no label");
-		return false;
-	}
-	else if( _nlabel == 0)
-		_nlabel = l.size();
-	else if( l.size() != _nlabel ){
-		errorString(" sample error ", in," label number not equal");
-		return false;
-	}
+		if( lf.size() != 2){
+			errorString(" sample format error ",in,
+			" ex. label0,label1,...,labelN:feature0,feature1,..., featureN"
+			);
+			return false;
+		}
+		l = split(lf[0],',');
+		if( l.size() == 0){
+			errorString(" sample error ", in," no label");
+			return false;
+		}
+		else if( _nlabel == 0)
+			_nlabel = l.size();
+		else if( l.size() != _nlabel ){
+			errorString(" sample error ", in," label number not equal");
+			return false;
+		}
 
 	}
+
 	vector<string> f = split(lf[1],',');
 	if( f.size() == 0){
 		errorString(" sample error ", in," no feature");
@@ -52,13 +53,13 @@ bool sample::readFormat(const string& in, data_t& out){
 		return false;
 	}
 
-	for(int i = 0; i<_nlabel; ++i){
+	for(int i = 0; i<(int)_nlabel; ++i){
 		if( !isDouble( l[i] ))
 			return false;
 		out.label.push_back( atof(l[i].c_str()) );
 	}
 
-	for(int i = 0; i<_nfeature; ++i){
+	for(int i = 0; i<(int)_nfeature; ++i){
 		if( !isDouble( f[i] ))
 			return false;
 		out.feature.push_back( atof(f[i].c_str()) );

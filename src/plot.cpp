@@ -18,23 +18,24 @@ double drawResult(nn& n,string title)
 	gr.Label('y',"y",0.5);
 
 	char flag[10] = " . ";
-
 	mglData	xdat(1), ydat(1);
 	int label;
 	for(double x=0; x<size; x+=0.1){
 		for(double y=0; y<size; y+=0.1){
 			xdat.a[0] = x;
 			ydat.a[0] = y;
-			n.layer[0].o(0) =
-				(x-n.getFNormParam().average(0))*
-				n.getFNormParam().scale(0);
-			n.layer[0].o(1) =
-				(y-n.getFNormParam().average(1))*
-				n.getFNormParam().scale(1);
+			n.Linput.out(0) =(
+				(x-n.featureNormParam.average(0))*
+				n.featureNormParam.scale(0) ) +
+				n.featureNormParam.offset;
+			n.Linput.out(1) =(
+				(y-n.featureNormParam.average(0))*
+				n.featureNormParam.scale(0) ) +
+				n.featureNormParam.offset;
 			n.test();
-			if(n.layer.back().o[0] <= 0.01)
+			if(n.Loutput.out(0) <= 0.5)
 				label = 0;
-			else if(n.layer.back().o(0) >= 0.99)
+			else if(n.Loutput.out(0) >= 0.5)
 				label = 1;
 			else
 				label = 2;
@@ -53,13 +54,19 @@ double drawResult(nn& n,string title)
 	flag[1] = '+';
 	flag[3] = '4';
 	for(int i=0; i<n.n_sample(); ++i){
+		n.Linput.setFeatures(i);
 		xdat.a[0] =
-			n.features[i](0)/n.getFNormParam().scale(0) +
-			n.getFNormParam().average(0);
+			( (*n.Linput.getFeatures())(i*2)
+			-n.featureNormParam.offset )
+			/n.featureNormParam.scale(0)
+			+n.featureNormParam.average(0);
 		ydat.a[0] =
-			n.features[i](1)/n.getFNormParam().scale(1) +
-			n.getFNormParam().average(1);
-		switch((int)n.outputs(i)){
+			( (*n.Linput.getFeatures())(i*2+1)
+			-n.featureNormParam.offset )
+			/n.featureNormParam.scale(1)
+			+n.featureNormParam.average(1);
+		n.Loutput.setOutput(i);
+		switch((int)n.Loutput.desireOut(0)){
 			case 0:
 				flag[0] = 'R';
 				break;
