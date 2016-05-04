@@ -33,12 +33,10 @@ double drawResult(nn& n,string title)
 				n.featureNormParam.scale(0) ) +
 				n.featureNormParam.offset;
 			n.test();
-			if(n.Loutput.out(0) <= 0.5)
+			if(n.Loutput.out(0) > n.Loutput.out(1) )
 				label = 0;
-			else if(n.Loutput.out(0) >= 0.5)
-				label = 1;
 			else
-				label = 2;
+				label = 1;
 			switch(label){
 				case 0:
 					flag[0] = 'r';
@@ -47,8 +45,7 @@ double drawResult(nn& n,string title)
 					flag[0] = 'g';
 					break;
 			}
-			if (label != 2)
-				gr.Plot(xdat, ydat,flag);
+			gr.Plot(xdat, ydat,flag);
 		}
 	}
 	flag[1] = '+';
@@ -66,17 +63,16 @@ double drawResult(nn& n,string title)
 			/n.featureNormParam.scale(1)
 			+n.featureNormParam.average(1);
 		n.Loutput.setOutput(i);
-		switch((int)n.Loutput.desireOut(0)){
-			case 0:
-				flag[0] = 'R';
-				break;
-			case 1:
-				flag[0] = 'G';
-				break;
-		}
+
+		if(n.Loutput.desireOut(0) > n.Loutput.desireOut(1))
+			flag[0] = 'R';
+		else
+			flag[0] = 'G';
+
 		gr.Plot(xdat, ydat,flag);
 	}
 	gr.WritePNG((n.getParam().sampleData+"_r.png").c_str());
+	system(("display "+ n.getParam().sampleData+ "_r.png").c_str() );
 	return 0;
 }
 
@@ -105,6 +101,7 @@ double drawError(nn& n, int iteration, string title)
 	}
 	gr.Plot(xdat, ydat,flag);
 	gr.WritePNG( (n.getParam().sampleData+"_e.png").c_str());
+	system(("display "+ n.getParam().sampleData+ "_e.png").c_str() );
 	return 0;
 }
 

@@ -75,5 +75,4 @@ namespace nn_a{
 		return param;
 	}
 
-
 }

@@ -3,7 +3,7 @@
 #
 CC = g++
 
-CFLAGS = -Wall -Wextra -fopenmp `pkg-config --cflags opencv`
+CFLAGS = -Wall -Wextra -fopenmp
 DBGCFLAGS = -DDEBUG -g
 RELCFLAGS = -o3
 
@@ -17,7 +17,7 @@ RELBIN = neural
 #
 #include files
 
-LIB = -larmadillo -lmgl `pkg-config --libs opencv`
+LIB = -larmadillo -lmgl
 
 #
 #build settings

@@ -112,10 +112,11 @@ inline void nn::bp(){
 		for(int i=0; i<nodesh; ++i){
 			//compute summmation of upper layer to this layer delta
 			for(int j=0; j<nodesU; ++j)
-				Lhidden[layer].delta(i) = (*deltaU)(j) * (*weightU)(i,j);
+				Lhidden[layer].delta(i) += (*deltaU)(j) * (*weightU)(i,j);
 			//compute delta
-			Lhidden[layer].dact(Lhidden[layer].sum, Lhidden[layer].sum, nodesU);
+			Lhidden[layer].dact(Lhidden[layer].sum, Lhidden[layer].sum, nodesh);
 			Lhidden[layer].delta(i) *= Lhidden[layer].sum(i);
+			//cout << Lhidden[layer].delta << endl;
 			//compute weight
 			const int inputsh = Lhidden[layer].n_input();
 			for(int j=0; j<inputsh; ++j)
@@ -202,38 +203,46 @@ bool nn::gradientChecking(int sample){
 	mat *wupdates = &Loutput.wupdates;
 	int layers = 1+Lhidden.size();
 
-	//for(int l=layers-1; l>=0; --l){
-	for(int l=layers-1; false; --l){
+	return true;
+	for(int l=layers-1; l>=0; --l){
+	//for(int l=layers-1; l>=layers-1; --l){
 		if(l == layers-1) cout << "gradient check layer output" << endl;
 		else cout << "gradient check layer hidden [" << l+1 <<']'<<endl;
 		for(int i=0; i<nodes; ++i){
 			for(int j=0; j<inputs; ++j){
 				clear_wupdates();
+				//compute delta weight
 				for(int s=0; s<sample; ++s){
 					Linput.setFeatures(s);
 					Loutput.setOutput(s);
-					test();
-					bp();
+					test(); //forward
+					bp(); //backpropagation
 				}
+				//because wupdates include learning rate so divide it
 				fw = -1*( (*wupdates)(j,i)/learningRate)/sample;
 
+				//w = w + h
 				(*weight)(j,i) += delta;
 				fwd = 0;
 				for(int s=0; s<sample; ++s){
 					Linput.setFeatures(s);
 					Loutput.setOutput(s);
 					test();
+					//f(w+h) summation cost
 					for(int k=0; k<Loutput.n_node(); ++k)
 						fwd += cost(Loutput.desireOut(k), Loutput.out(k));
 				}
+				//set w = w - h (w = w + h in last step ,- 2*h)
 				(*weight)(j,i) -= 2*delta;
 				for(int s=0; s<sample; ++s){
 					Linput.setFeatures(s);
 					Loutput.setOutput(s);
 					test();
+					//f(w+h) - f(w-h) summation cost
 					for(int k=0; k<Loutput.n_node(); ++k)
 						fwd -= cost(Loutput.desireOut(k), Loutput.out(k));
 				}
+				//reset w to w
 				(*weight)(j,i) += delta;
 				fwd /= 2*delta*sample;
 
@@ -334,6 +343,10 @@ void nn::train(){
 		//if(i%1000 ==1000)
 			//testResult();
 	}
+	/*
+	cout << Loutput.weight << endl;
+	cout << Lhidden[0].weight << endl;
+	*/
 	cout << endl;
 }
 

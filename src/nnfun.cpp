@@ -49,7 +49,7 @@ namespace nn_func{
 	}
 
 	double nmse(double desire, double out){
-		return 0.5*pow( (desire-out)/desire , 2);
+		return pow( (desire-out)/desire , 2);
 	}
 
 	double dnmse(double desire, double out){
