@@ -1,4 +1,4 @@
-#define ARMA_NO_DEBUG
+//#define ARMA_NO_DEBUG
 #include <armadillo>
 #include <vector>
 using arma::rowvec;

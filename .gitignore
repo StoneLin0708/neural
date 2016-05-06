@@ -1,6 +1,6 @@
 obj/
-tools/
 result/
 data/
+nntest/
 *.swp
 neural

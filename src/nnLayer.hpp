@@ -1,4 +1,3 @@
-#define ARMA_NO_DEBUG
 #include <armadillo>
 #include <string>
 
@@ -93,6 +92,7 @@ public:
 
 	//mat error;
 	rowvec cost;
+	rowvec costnmse;
 
 	void (*act)(rowvec &in, rowvec &out, int size);
 	void (*dact)(rowvec &in, rowvec &out, int size);

@@ -5,7 +5,62 @@
 
 using namespace std;
 
-double drawResult(nn& n,string title)
+double drawResultTimeseries(nn& n,string title, string name)
+{
+	mglGraph gr;
+	gr.SetSize(1000,600);
+	gr.SetRanges(0, n.n_sample(),
+			(	(*min_element(
+							  &((*n.Linput.getFeatures())(0)),
+							  &(*n.Linput.getFeatures())(n.n_sample()+n.getParam().trainFeature-1) ) )
+			 - n.featureNormParam.offset )
+			/n.featureNormParam.scale(0)
+			+n.featureNormParam.average(0)*0.8,
+			(	(*max_element(
+							  &((*n.Linput.getFeatures())(0)),
+							  &(*n.Linput.getFeatures())(n.n_sample()+n.getParam().trainFeature-1) ) )
+			 - n.featureNormParam.offset )
+			/n.featureNormParam.scale(0)
+			+n.featureNormParam.average(0)*1.1
+			);
+	gr.Title(title.c_str());
+	gr.Light(true);
+	gr.Axis(); gr.Grid(); gr.Box();
+	gr.Label('x',"time",0.2);
+	gr.Label('y',"value",0.2);
+
+	char flag[10] = "b.";
+	int s = n.n_sample();
+	mglData	xdat(s), ydat(s);
+	for(int i=0; i<s; ++i){
+		xdat.a[i] = i;
+		n.Loutput.setOutput(i);
+		ydat.a[i] =
+			( n.Loutput.desireOut(0) - n.featureNormParam.offset )
+			/n.featureNormParam.scale(0)
+			+n.featureNormParam.average(0);
+	}
+	gr.Plot(xdat, ydat,flag);
+
+	flag[0] = 'r';
+	for(int i=0; i<s; ++i){
+		xdat.a[i] = i;
+		n.Linput.setFeatures(i);
+		n.test();
+		//cout << "d "<< i << " "<<ydat.a[i];
+		ydat.a[i] =
+			( n.Loutput.out(0) - n.featureNormParam.offset )
+			/n.featureNormParam.scale(0)
+			+n.featureNormParam.average(0);
+		//cout << " t "<<ydat.a[i]<<endl;
+	}
+	gr.Plot(xdat, ydat,flag);
+
+	gr.WritePNG( (name+"_r.png").c_str());
+	//system(("display "+ name + "_r.png").c_str() );
+	return 0;
+}
+double drawResult(nn& n,string title,string name)
 {
 	const int size = 10;
 	mglGraph gr;
@@ -71,25 +126,26 @@ double drawResult(nn& n,string title)
 
 		gr.Plot(xdat, ydat,flag);
 	}
-	gr.WritePNG((n.getParam().sampleData+"_r.png").c_str());
-	system(("display "+ n.getParam().sampleData+ "_r.png").c_str() );
+	gr.WritePNG((name+"_r.png").c_str());
+	//system(("display "+ name+ "_r.png").c_str() );
 	return 0;
 }
 
-double drawError(nn& n, int iteration, string title)
+double drawError(nn& n, int iteration, string name)
 {
 	mglGraph gr;
 	gr.SetSize(800,600);
+	gr.SubPlot(1,2,0);
+	gr.Title("mse");
 	gr.SetRanges(0,iteration,
-			0.00001,*max_element(n.e.begin(),n.e.end())*10 );
+			*min_element(n.e.begin(),n.e.end())/10,*max_element(n.e.begin(),n.e.end())*10 );
 			//0.1, 100 );
 	gr.SetFunc("","lg(y)");
 	//gr->Grid("!","h=");
 	//gr->FPlot("sqrt(1+x^2)");
-	gr.Title(title.c_str());
 	gr.Light(true);
 	gr.Axis(); gr.Grid(); gr.Box();
-	gr.Label('x',"iteration",0.2);
+	gr.Label('x',"iteration",0.15);
 	gr.Label('y',"error",0.2);
 
 	char flag[10] = "b.";
@@ -100,8 +156,26 @@ double drawError(nn& n, int iteration, string title)
 		ydat.a[i] = n.e[i];
 	}
 	gr.Plot(xdat, ydat,flag);
-	gr.WritePNG( (n.getParam().sampleData+"_e.png").c_str());
-	system(("display "+ n.getParam().sampleData+ "_e.png").c_str() );
+//---------------------------------------------------
+	gr.SubPlot(1,2,1);
+	gr.Title("nmse");
+	gr.SetRanges(0,iteration,
+			*min_element(n.en.begin(),n.en.end())*0.9,*max_element(n.en.begin(),n.en.end())*1.1 );
+	//gr.SetFunc("","lg(y)");
+	gr.Light(true);
+	gr.Axis(); gr.Grid(); gr.Box();
+	gr.Label('x',"iteration",0.15);
+	gr.Label('y',"error",0.2);
+
+	flag[0] = 'g';
+	for(int i=0; i<s; ++i){
+		xdat.a[i] = i * iteration/n.e.size();
+		ydat.a[i] = n.en[i];
+	}
+	gr.Plot(xdat, ydat,flag);
+
+	gr.WritePNG( (name+"_e.png").c_str());
+	//system(("display "+ name+ "_e.png").c_str() );
 	return 0;
 }
 

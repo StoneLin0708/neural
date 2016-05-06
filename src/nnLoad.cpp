@@ -12,10 +12,14 @@ bool nn::readSample(const string& path){
 	if(_type == nn_t::timeseries){
 		if(!s.read(path.c_str(),true)) return false;
 		_n_sample = s.size();
+		_n_feature = s.n_feature();
+		_n_output = 1;
+		_param.featureOffset = 1;
 		features = zeros<rowvec>( _n_sample );
 		for(int i=0; i<_n_sample; ++i)
 				features( i ) = s[i].feature[0];
-		featureNormParam = nn_a::normalize(features, _n_feature, -1, 1);
+		featureNormParam = nn_a::normalize(features, _n_feature, -0.8, 0.8);
+		_n_sample = s.size()-_param.trainFeature;
 		return true;
 	}
 	else if(_type == nn_t::classification){
@@ -79,14 +83,10 @@ bool nn::enableParam(){
 
 	if(!readSample(_param.sampleData))
 		return false;
-	if(_param.trainNumber == -1)
+	if(_param.trainNumber == 0)
 		_param.trainNumber = _n_sample;
-
-	if(_param.testNumber == -1)
+	if(_param.testNumber == 0)
 		_param.testNumber = _n_sample;
-
-	if(_param.testEnd == -1)
-		_param.testEnd = _n_sample;
 //costFunction----------------------------------------
 	if(_param.costFunction == "mse"){
 		cost = nn_func::mse;

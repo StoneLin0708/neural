@@ -4,5 +4,6 @@
 
 using std::string;
 
-double drawResult(nn& n,string title);
-double drawError(nn& n, int iteration, string title);
+double drawResultTimeseries(nn& n,string title, string name);
+double drawResult(nn& n,string title,string name);
+double drawError(nn& n, int iteration, string name);
