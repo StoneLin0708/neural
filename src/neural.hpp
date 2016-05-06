@@ -1,11 +1,12 @@
 #pragma once
-#define ARMA_NO_DEBUG
+//#define ARMA_NO_DEBUG
 #include <vector>
 #include <armadillo>
 #include <string>
 #include "sample.hpp"
 #include "algorithm.hpp"
 #include "nnLayer.hpp"
+#include "sampleSet.hpp"
 
 using std::string;
 using std::vector;
@@ -24,18 +25,6 @@ namespace nn_t{
 		regression,
 		timeseries
 	}output_t;
-
-	typedef enum{
-		testAll,
-		testNumber
-	}test_t;
-
-	typedef enum {
-		trainAll,
-		trainNumber,
-		trainBunch
-	}train_t;
-
 
 }
 
@@ -60,12 +49,12 @@ struct nnParam{
 	string defaultActivation;			/*13*/
 	int featureOffset;					/*14*/
 
-	nn_t::train_t trainType;			/*15*/
+	sampleSet::type trainType;			/*15*/
 	int trainStart;						/*15*/
 	int trainEnd;						/*15*/
 	int trainNumber;					/*15*/
 
-	nn_t::test_t testType;				/*16*/
+	sampleSet::type testType;				/*16*/
 	int testStart;						/*16*/
 	int testEnd;						/*16*/
 	int testNumber;						/*16*/
@@ -110,14 +99,9 @@ public:
 	nn_a::normParam outputNormParam;
 
 	vector<double> e;
+	vector<double> en;
 	bool success(){return _init;};
 private:
-
-	int getFirstSample();
-	bool getNextSample(int &);
-
-	int getFirstTestSample();
-	bool getNextTestSample(int &);
 
 	double (*cost)(double desire, double out);
 	double (*dcost)(double desire, double out);

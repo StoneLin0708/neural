@@ -56,19 +56,23 @@ void nn::testResultSeries(){
 	}while(getNextTestSample(s));
 
 }
-
 */
+
 void nn::testResultClassification(){
-	int s = getFirstTestSample();
+	int s;
 	int step = _param.testStep;
 	int outputClass, realClass;
 	int max,i;
 	int errors=0;
+	sampleSet::param param = {_n_sample, _param.testStart, _param.testEnd, _param.testNumber};
+	sampleSet sampleSet(_param.testType, param);
+
 	if(step == 0)
 		step = _n_sample;
 
 	int j=0;
-	do{
+	while(!sampleSet.last()){
+		s = sampleSet.getNext();
 		Linput.setFeatures(s);
 		test();
 		Loutput.setOutput(s);
@@ -94,7 +98,8 @@ void nn::testResultClassification(){
 			cin.get();
 			j=0;
 		}
-	}while(getNextTestSample(s));
+	}
+
 	cout<< " all : "<< _param.testNumber <<" error : " << errors << " predict rate "<< (1-(double)errors/_param.testNumber)*100<<'%' << endl;
 
 }

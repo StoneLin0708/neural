@@ -43,6 +43,7 @@ void nnLayerInput::setFeatures(int Nth){
 	static const int nfeature = _node-1;
 	int offsetN = _offset*Nth;
 	for(int i=0; i<nfeature; ++i){
+		//cout << "in  get:"<<offsetN+i<<endl;
 		out(i) = (*_features)( offsetN + i );
 	}
 }
@@ -142,6 +143,7 @@ nnLayerOutput::nnLayerOutput(
 		wupdates = zeros<mat>(_input, _node);
 
 		cost = zeros<rowvec>(_node);
+		costnmse = zeros<rowvec>(_node);
 
 		_init = true;
 	}
@@ -157,6 +159,7 @@ void nnLayerOutput::operator=(const nnLayerOutput &in){
 	wupdate = in.wupdate;
 	wupdates = in.wupdates;
 	cost = in.cost;
+	costnmse = in.costnmse;
 	desireOut = in.desireOut;
 	_node = in._node;
 	_input = in._input;
@@ -170,6 +173,7 @@ void nnLayerOutput::setOutput(int Nth){
 	int offsetN = _offset*Nth;
 	//cout << "get O " << offsetN << " to " << offsetN + _node-1 << endl;
 	for(int i=0; i<_node; ++i){
+		//cout << "out get:"<<offsetN+i+_start<<endl;
 		desireOut(i) = (*_outputs)( offsetN + i + _start);
 	}
 }

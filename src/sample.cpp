@@ -38,34 +38,62 @@ bool sample::readFormat(const string& in, data_t& out){
 			return false;
 		}
 
-	}
-
-	vector<string> f = split(lf[1],',');
-	if( f.size() == 0){
-		errorString(" sample error ", in," no feature");
-		return false;
-	}
-	else if( _nfeature == 0){
-		_nfeature = f.size();
-	}
-	else if( f.size() != _nfeature ){
-		errorString(" sample error ", in," feature number not equal");
-		return false;
-	}
-
-	for(int i = 0; i<(int)_nlabel; ++i){
-		if( !isDouble( l[i] ))
+		vector<string> f = split(lf[1],',');
+		if( f.size() == 0){
+			errorString(" sample error ", in," no feature");
 			return false;
-		out.label.push_back( atof(l[i].c_str()) );
-	}
-
-	for(int i = 0; i<(int)_nfeature; ++i){
-		if( !isDouble( f[i] ))
+		}
+		else if( _nfeature == 0){
+			_nfeature = f.size();
+		}
+		else if( f.size() != _nfeature ){
+			errorString(" sample error ", in," feature number not equal");
 			return false;
-		out.feature.push_back( atof(f[i].c_str()) );
-	}
+		}
 
-	return true;
+		for(int i = 0; i<(int)_nlabel; ++i){
+			if( !isDouble( l[i] ))
+				return false;
+			out.label.push_back( atof(l[i].c_str()) );
+		}
+
+		for(int i = 0; i<(int)_nfeature; ++i){
+			if( !isDouble( f[i] ))
+				return false;
+			out.feature.push_back( atof(f[i].c_str()) );
+		}
+
+		return true;
+
+	}
+	else{
+		vector<string> f = split(lf[0],',');
+		if( f.size() == 0){
+			errorString(" sample error ", in," no feature");
+			return false;
+		}
+		else if( _nfeature == 0){
+			_nfeature = f.size();
+		}
+		else if( f.size() != _nfeature ){
+			errorString(" sample error ", in," feature number not equal");
+			return false;
+		}
+
+		for(int i = 0; i<(int)_nlabel; ++i){
+			if( !isDouble( l[i] ))
+				return false;
+			out.label.push_back( atof(l[i].c_str()) );
+		}
+
+		for(int i = 0; i<(int)_nfeature; ++i){
+			if( !isDouble( f[i] ))
+				return false;
+			out.feature.push_back( atof(f[i].c_str()) );
+		}
+
+		return true;
+	}
 }
 
 bool sample::read(const string path,bool nolable){

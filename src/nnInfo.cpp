@@ -1,6 +1,8 @@
 #include "neural.hpp"
 #include <iostream>
 #include <iomanip>
+#include <float.h>
+#include <sstream>
 using namespace std;
 void nn::show(){
 	cout << "----------" << "-input--" << "----------" << endl;
@@ -19,36 +21,30 @@ void nn::show(){
 	cout << "----------" << "--------" << "----------" << endl;
 }
 void nn::showParam(){
-	cout<< "sampleType       : " << _param.sampleType << endl
-		<< "stopTrainingCost : " << _param.stopTrainingCost << endl
-		<< "trainFeature     : " << _param.trainFeature << endl
-		<< "sampleData       : " << _param.sampleData << endl
-		<< "iteration        : " << _param.iteration << endl
-		<< "learningRate     : " << _param.learningRate << endl
-		<< "hidden.size()    : " << _param.hidden.size() << endl
-		<< "output           : " << _param.output.nodes << endl
+	string stopTrainingCost;
+	stringstream ss;
+	if(_param.stopTrainingCost == -DBL_MAX)
+		ss<< "never";
+	else
+		ss<< _param.stopTrainingCost;
+	ss>>stopTrainingCost;
+	cout<< "sampleType       : " << setw(10) <<_param.sampleType       << "  trainType        : " << _param.trainType << endl
+		<< "stopTrainingCost : " << setw(10) <<stopTrainingCost        << "  trainStart       : " << _param.trainStart << endl
+		<< "trainFeature     : " << setw(10) <<_param.trainFeature     << "  trainEnd         : " << _param.trainEnd << endl
+		<< "costFunction     : " << setw(10) <<_param.costFunction     << "  trainNumber      : " << _param.trainNumber << endl
+		<< "iteration        : " << setw(10) <<_param.iteration        << "  testType         : " << _param.testType << endl
+		<< "learningRate     : " << setw(10) <<_param.learningRate     << "  testStart        : " << _param.testStart << endl
+		<< "hidden.size()    : " << setw(10) <<_param.hidden.size()    << "  testEnd          : " << _param.testEnd << endl
+		<< "output           : " << setw(10) <<_param.output.nodes     << "  testNumber       : " << _param.testNumber << endl
 
-		<< "normalizeMethod  : " << _param.normalizeMethod << endl
-		<< "loadWeight       : " << _param.loadWeight << endl
-		<< "saveWeight       : " << _param.saveWeight << endl
-		<< "weightPath       : " << _param.weightPath << endl
+		<< "featureOffset    : " << setw(10) <<_param.featureOffset << endl
 
-		<< "weightName       : " << _param.weightName << endl
-		<< "defaultActivation: " << _param.defaultActivation << endl
-		<< "featureOffset    : " << _param.featureOffset << endl
+		<< "normalizeMethod  : " << setw(10) <<_param.normalizeMethod  << "  testStep         : " << _param.testStep << endl
+		<< "loadWeight       : " << setw(10) <<_param.loadWeight       << "  saveWeight       : " << _param.saveWeight << endl
+		<< "weightPath       : " << setw(10) <<_param.weightPath       << "  weightName       : " <<_param.weightName << endl
+		<< "defaultActivation: " << setw(10) <<_param.defaultActivation << endl
+		<< "sampleData       : " << setw(10) <<_param.sampleData << endl;
 
-		<< "trainType        : " << _param.trainType << endl
-		<< "trainStart       : " << _param.trainStart << endl
-		<< "trainEnd         : " << _param.trainEnd << endl
-		<< "trainNumber      : " << _param.trainNumber << endl
-
-		<< "testType         : " << _param.testType << endl
-		<< "testStart        : " << _param.testStart << endl
-		<< "testEnd          : " << _param.testEnd << endl
-		<< "testNumber       : " << _param.testNumber << endl
-
-		<< "testStep         : " << _param.testStep << endl
-		<< "costFunction     : " << _param.costFunction << endl;
 
 }
 /*

@@ -1,5 +1,5 @@
 #pragma once
-#define ARMA_NO_DEBUG
+//#define ARMA_NO_DEBUG
 #include <math.h>
 #include <armadillo>
 using arma::rowvec;

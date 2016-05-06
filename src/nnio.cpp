@@ -1,64 +1,54 @@
 #include "nnio.hpp"
 #include "stringCheck.hpp"
+#include "sampleSet.hpp"
+
 #include <fstream>
 #include <vector>
 #include <float.h>
 
 using namespace std;
 
-bool readnnTestSample(const string &in,nnParam &param){
-	vector<string> sp = split(in,',');
-	if( sp[0] == "all" ){
-		param.testType = nn_t::testAll ;
-		param.testStart = 1 ;
-		param.testNumber = -1;
-		return true;
-	}
-	else if( sp[0] == "number" ){
-		if(sp.size() != 3) return false;
-		param.testType = nn_t::testNumber ;
-		if( !isInt(sp[1]) || !isInt(sp[2]) ) return false;
-		param.testStart = atoi(sp[1].c_str());
-		param.testEnd = atoi(sp[2].c_str());
-		param.testNumber = param.testEnd -
-			param.testStart + 1;
-		return true;
-	}
-
-	errorString(" readnn fail sampling error ", in,"");
-	return false;
+void removeSpace(string &str){
+	string tmp;
+	for(int i=0;i<str.size();++i)
+		if(str[i] != ' ' && str[i] != 13)
+			tmp.push_back(str[i]);
+	str = tmp;
 }
 
-bool readnnSampling(const string &in,nnParam &param){
+bool readnnSampleSet(const string &in,sampleSet::type &type, int &start, int &end, int &numberOfSet){
 	vector<string> sp = split(in,',');
-	if( sp[0] == "all" ){
-		param.trainType = nn_t::trainAll ;
-		param.trainStart = 1 ;
-		param.trainNumber = -1;
+	if( sp[0] == "sequence" ){
+		type = sampleSet::sequence;
 		return true;
 	}
-	else if( sp[0] == "number" ){
+	else if( sp[0] == "sequenceRange" ){
+		type = sampleSet::sequenceRange;
 		if(sp.size() != 3) return false;
-		param.trainType = nn_t::trainNumber ;
 		if( !isInt(sp[1]) || !isInt(sp[2]) ) return false;
-		param.trainStart = atoi(sp[1].c_str());
-		param.trainEnd = atoi(sp[2].c_str());
-		param.trainNumber = param.trainEnd -
-			param.trainStart + 1;
+		start = atoi(sp[1].c_str());
+		end = atoi(sp[2].c_str());
 		return true;
 	}
-	else if( sp[0] == "bunch" ){
-		param.trainType = nn_t::trainBunch ;
-		param.trainStart = 1 ;
-		if(sp.size() != 3) return false;
+	else if( sp[0] == "sequenceSet" ){
+		type = sampleSet::sequenceSet;
+		if(sp.size() != 2) return false;
 		if(!isInt(sp[1])) return false;
-		param.trainNumber = atoi( sp[1].c_str() );
-		if(!isInt(sp[2],false) ){
-			if( sp[2] != "all" ) return false;
-			param.trainEnd = -1;
-		}
-		else
-			param.trainEnd = atoi( sp[2].c_str() ) * param.trainNumber;
+		numberOfSet = atoi( sp[1].c_str() );
+		return true;
+	}
+	else if( sp[0] == "sortRandomSet" ){
+		type = sampleSet::sortRandomSet;
+		if(sp.size() != 2) return false;
+		if(!isInt(sp[1])) return false;
+		numberOfSet = atoi( sp[1].c_str() );
+		return true;
+	}
+	else if( sp[0] == "fullRandomSet" ){
+		type = sampleSet::fullRandomSet;
+		if(sp.size() != 2) return false;
+		if(!isInt(sp[1])) return false;
+		numberOfSet = atoi( sp[1].c_str() );
 		return true;
 	}
 
@@ -109,7 +99,7 @@ int readnnWhich(const string &in, string &out){
 		"weightName",		/*12*/
 		"defaultActivation",/*13*/
 		"featureOffset",	/*14*/
-		"samplingType",		/*15*/
+		"trainType",		/*15*/
 
 		"testType",			/*16*/
 		"testStep",			/*17*/
@@ -155,12 +145,12 @@ bool readnn(const string& path, nnParam &param){
 	param.defaultActivation = "";		/*n 13*/
 	param.featureOffset = 0;			/*14*/
 
-	param.trainType = nn_t::trainAll;	/*15*/
+	param.trainType = sampleSet::sequence;	/*15*/
 	param.trainStart = 0;				/*15*/
 	param.trainEnd = 0;					/*15*/
 	param.trainNumber = 0;				/*15*/
 
-	param.testType = nn_t::testAll;		/*16*/
+	param.testType = sampleSet::sequence;		/*16*/
 	param.testStart = 0;				/*16*/
 	param.testEnd = 0;					/*16*/
 	param.testNumber = 0;				/*17*/
@@ -171,7 +161,9 @@ bool readnn(const string& path, nnParam &param){
 		return false;
 	}
 
-	while( fnn >> in ){
+	fnn >> ws;
+	while( getline(fnn,in) ){
+		removeSpace(in);
 		if(in[0] == '#') continue;
 		//cout << " readnn : " << in;
 		switch(readnnWhich(in, out) ){
@@ -263,15 +255,15 @@ bool readnn(const string& path, nnParam &param){
 			break;
 
 		case 15:
-			if(!readnnSampling(out, param)){
-				errorString(" readnn sampling argument error",out,"");
+			if(!readnnSampleSet(out, param.trainType, param.trainStart, param.trainEnd, param.trainNumber)){
+				errorString(" readnn trainSample argument error",out,"");
 				return false;
 			}
 			break;
 
 		case 16:
-			if(!readnnTestSample(out, param)){
-				errorString(" readnn test argument error",out,"");
+			if(!readnnSampleSet(out, param.testType, param.testStart, param.testEnd, param.testNumber)){
+				errorString(" readnn testSample argument error",out,"");
 				return false;
 			}
 			break;
