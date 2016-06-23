@@ -65,7 +65,7 @@ struct nnParam{
 
 class nn{
 public:
-	nn(nnParam param);
+	nn(nnParam param, bool info=false);
 
 	nnParam& getParam(){return _param;};
 	bool enableParam();

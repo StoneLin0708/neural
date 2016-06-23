@@ -68,4 +68,3 @@ for trainTypeNow in trainType:
             else:
                 f.write('output=1'+'\n')
             f.close()
-

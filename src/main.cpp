@@ -14,20 +14,24 @@ using namespace arma;
 
 
 int main(int argc,char* argv[]){
-	if(argc != 3 && argc != 2){
-		cout <<" data  ,result name" << endl;
+	if(argc !=4 && argc != 3 && argc != 2){
+		cout <<" data  ,result name, info ('info' or '' )" << endl;
 		return -1;
 	}
 
 	string path = argv[1];
 
 	string name;
-	if(argc == 3)
+	if( (argc >= 3) && (string(argv[2]) != "info") )
 		name = argv[2];
 	//nn n(path,logistic,dlogistic);
 	nnParam param;
 	readnn(path,param);
-	nn n(param);
+	bool info = false;
+	if(argc == 4 || argc == 3)
+		if(string(argv[argc-1]) == "info")
+			info = true;
+	nn n(param, info);
 	if(!n.success()) return -2;
 
 	double t0 = omp_get_wtime();
@@ -45,6 +49,8 @@ int main(int argc,char* argv[]){
 	snprintf(s,100,"result i =%d lr=%f",n.getParam().iteration, n.getParam().learningRate);
 	if(n.type() == nn_t::classification)
 		n.testResultClassification();
+	if(n.type() == nn_t::regression)
+		n.testResultRegression();
 	if(n.type() == nn_t::timeseries){
 		drawResultTimeseries(n,s,name);
 	}

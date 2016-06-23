@@ -1,6 +1,6 @@
 #include "neural.hpp"
 #include "nnfun.hpp"
-#include "stringCheck.hpp"
+#include <stringProcess.hpp>
 #include <math.h>
 
 using arma::zeros;
@@ -21,8 +21,7 @@ bool nn::readSample(const string& path){
 		featureNormParam = nn_a::normalize(features, _n_feature, -0.8, 0.8);
 		_n_sample = s.size()-_param.trainFeature;
 		return true;
-	}
-	else if(_type == nn_t::classification){
+	}else if(_type == nn_t::classification){
 		if(!s.read(path.c_str())) return false;
 		_n_sample = s.size();
 		_n_feature = s.n_feature();
@@ -52,8 +51,7 @@ bool nn::readSample(const string& path){
 		_param.featureOffset = _n_feature;
 	//	_param.numberOfOutput = _n_output;
 		return true;
-	}
-	else{
+	}else{
 		if(!s.read(path.c_str())) return false;
 		_n_sample = s.size();
 		_n_feature = s.n_feature();
@@ -71,6 +69,7 @@ bool nn::readSample(const string& path){
 		outputNormParam = nn_a::normalize(outputs, _n_output, 0, 1);
 		_param.trainFeature = _n_feature;
 		_param.featureOffset = _n_feature;
+	s.list();
 		return true;
 	}
 }
@@ -148,6 +147,7 @@ bool nn::enableParam(){
 				&outputs, _n_output, 0, act, dact);
 
 	if(!Loutput.success()) return false;
+
 	return true;
 	for(int i=0; i<_n_sample; ++i){
 		cout << i << " - ";

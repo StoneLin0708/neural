@@ -3,21 +3,22 @@
 #
 CC = g++
 
-CFLAGS = -Wall -Wextra -fopenmp -std=gnu++11
+CFLAGS = -Wall -Wextra -fopenmp -std=gnu++11 -I../stringProcess/include
 DBGCFLAGS = -DDEBUG -g
 RELCFLAGS = -o3 -DARMA_NO_DEBUG
 
 #
 #project files
 #
-SRCS = main.cpp sample.cpp neural.cpp nnLayer.cpp plot.cpp stringCheck.cpp nnio.cpp algorithm.cpp nnfun.cpp sampleSet.cpp nnLoad.cpp nnInfo.cpp nnTest.cpp 
+SRCS = main.cpp sample.cpp neural.cpp nnLayer.cpp plot.cpp nnio.cpp algorithm.cpp nnfun.cpp sampleSet.cpp nnLoad.cpp nnInfo.cpp nnTest.cpp 
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural
 #
-#include files
-
-LIB = -larmadillo -lmgl
+#library
+#
+#
+LIB = ../stringProcess/build/libstringProcess.a -larmadillo -lmgl
 
 #
 #build settings

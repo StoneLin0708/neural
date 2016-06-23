@@ -1,5 +1,5 @@
 #include "neural.hpp"
-#include "stringCheck.hpp"
+#include <stringProcess.hpp>
 #include "nnfun.hpp"
 #include "nnio.hpp"
 #include "sampleSet.hpp"
@@ -13,14 +13,16 @@
 using namespace std;
 using namespace arma;
 
-nn::nn(nnParam param){
+nn::nn(nnParam param, bool info){
 	_init = true;
 	_param = param;
 	//readnn(path, _param);
 	if(!enableParam())
 		_init = false;
-	show();
-	showParam();
+	if(info){
+		show();
+		showParam();
+	}
 }
 
 inline

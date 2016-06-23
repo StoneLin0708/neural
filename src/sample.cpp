@@ -1,5 +1,5 @@
 #include "sample.hpp"
-#include "stringCheck.hpp"
+#include <stringProcess.hpp>
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
@@ -114,9 +114,11 @@ bool sample::read(const string path,bool nolable){
 		else
 			return false;
     }
+	/*
 	cout << " output : " << _nlabel;
 	cout << " feature : " << _nfeature;
 	cout << " sample : " << _data.size() << endl;
+	*/
     sample_f.close();
 	_path = path;
     return true;
@@ -135,6 +137,7 @@ void sample::list(){
 		cout<< "[ ";
 		for(int j=0; j< (int)_nlabel; j++)
 			cout<< setw(5) << _data[i].label[j] << " ,";
+		cout << " : ";
 		for(int j=0; j<(int)_nfeature; j++)
 			cout<< setw(5) << _data[i].feature[j] << " ,";
 		cout<< " ]"  << endl;

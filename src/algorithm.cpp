@@ -43,6 +43,7 @@ namespace nn_a{
 				data(j*feature+i) += param.offset;
 			}
 		}
+		return param;
 		//test
 		cout<< " max " << fmax
 			<< " min " << fmin
@@ -50,7 +51,6 @@ namespace nn_a{
 			<< " sca " << param.scale
 			<< " off " << param.offset << endl;
 		cout<<"-----------------"<<endl;
-		return param;
 		rowvec taverage = zeros<rowvec>(feature);
 		rowvec tscale = zeros<rowvec>(feature);
 		fmin.fill(DBL_MAX);

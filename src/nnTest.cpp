@@ -2,31 +2,6 @@
 #include <iostream>
 using namespace std;
 /*
-void nn::testResultRegression(){
-	double errors=0, singleError;
-	int s = getFirstTestSample();
-	int step = _param.testStep;
-	if(step == 0)
-		step = _n_sample;
-	int j=0;
-	do{
-		test( s );
-		singleError = 0.5* pow(outputs( s )-layer.back().o(0), 2);
-		errors += singleError;
-		if(j<step)
-			j++;
-		else{
-			cout<< " feature : " << features[s]
-				<< " output : " << layer.back().o(0) << endl
-				<< " desire : " << outputs(s) << endl;
-			cin.get();
-			j=0;
-		}
-	}while(getNextTestSample(s));
-	cout<< " average cost " << errors/_param.testSampleNumber << endl;
-
-}
-
 void nn::testResultSeries(){
 	int s = getFirstTestSample();
 	int step = _param.testStep;
@@ -103,3 +78,43 @@ void nn::testResultClassification(){
 	cout<< " all : "<< _param.testNumber <<" error : " << errors << " predict rate "<< (1-(double)errors/_param.testNumber)*100<<'%' << endl;
 
 }
+
+void nn::testResultRegression(){
+	int s;
+	int step = _param.testStep;
+
+	sampleSet::param param = {_n_sample, _param.testStart, _param.testEnd, _param.testNumber};
+	sampleSet sampleSet(_param.testType, param);
+
+	if(step == 0)
+		step = _n_sample;
+
+	int j=0;
+	while(!sampleSet.last()){
+		s = sampleSet.getNext();
+		Linput.setFeatures(s);
+		test();
+		Loutput.setOutput(s);
+
+		if(j<step)
+			j++;
+		else{
+			cout<< " output : ";
+			for(int i=0;i<Loutput.n_node();++i){
+				cout << (Loutput.out(i)-outputNormParam.offset)
+				/ outputNormParam.scale(i)
+				+ outputNormParam.average(i)<<",";
+			}
+			cout<< " real : ";
+			for(int i=0;i<Loutput.n_node();++i){
+				cout <<(Loutput.desireOut(i)-outputNormParam.offset)
+				/ outputNormParam.scale(i)
+				+ outputNormParam.average(i)<<",";
+			}
+			cin.get();
+			j=0;
+		}
+	}
+
+}
+

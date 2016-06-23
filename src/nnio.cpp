@@ -1,5 +1,5 @@
 #include "nnio.hpp"
-#include "stringCheck.hpp"
+#include <stringProcess.hpp>
 #include "sampleSet.hpp"
 
 #include <fstream>
@@ -165,6 +165,7 @@ bool readnn(const string& path, nnParam &param){
 	while( getline(fnn,in) ){
 		removeSpace(in);
 		if(in[0] == '#') continue;
+		if(in[0] == '\0') continue;
 		//cout << " readnn : " << in;
 		switch(readnnWhich(in, out) ){
 		case -1:
