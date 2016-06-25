@@ -1,4 +1,3 @@
-#include "nnio.hpp"
 #include <stringProcess.hpp>
 #include "sampleSet.hpp"
 
@@ -6,15 +5,10 @@
 #include <vector>
 #include <float.h>
 
+#include "nnio.hpp"
+
 using namespace std;
 
-void removeSpace(string &str){
-	string tmp;
-	for(int i=0;i<str.size();++i)
-		if(str[i] != ' ' && str[i] != 13)
-			tmp.push_back(str[i]);
-	str = tmp;
-}
 
 bool readnnSampleSet(const string &in,sampleSet::type &type, int &start, int &end, int &numberOfSet){
 	vector<string> sp = split(in,',');
@@ -79,46 +73,6 @@ bool readLayerParam_output(const string &in,layerParam &lparam){
 	return true;
 }
 
-int readnnWhich(const string &in, string &out){
-	string strList[] = {
-		"sampleType",		/*0*/
-		"stopTrainingCost",	/*1*/
-		"trainFeature",		/*2*/
-		"sampleData",		/*3*/
-
-		"iteration",		/*4*/
-		"learningRate",		/*5*/
-		"hidden",			/*6*/
-		"output",			/*7*/
-
-		"normalizeMethod",	/*8*/
-		"loadWeight",		/*9*/
-		"saveWeight",		/*10*/
-		"weightPath",		/*11*/
-
-		"weightName",		/*12*/
-		"defaultActivation",/*13*/
-		"featureOffset",	/*14*/
-		"trainType",		/*15*/
-
-		"testType",			/*16*/
-		"testStep",			/*17*/
-		"costFunction"		/*18*/
-	};
-
-	vector<string> sstr = split(in,'=');
-	if(sstr.size() != 2){
-		out = in;
-		return -1;
-	}
-	for(int i=0; i<19; ++i)
-		if( sstr[0] == strList[i] ){
-			out = sstr[1];
-			return i;
-		}
-	out = sstr[0];
-	return -1;
-}
 
 bool readnn(const string& path, nnParam &param){
 	ifstream fnn;
@@ -163,16 +117,17 @@ bool readnn(const string& path, nnParam &param){
 
 	fnn >> ws;
 	while( getline(fnn,in) ){
-		removeSpace(in);
+		removeChar(in, (char)13);
+		replaceChar(in, '\t', ' ');
+		removeChar(in, ' ');
 		if(in[0] == '#') continue;
 		if(in[0] == '\0') continue;
 		//cout << " readnn : " << in;
-		switch(readnnWhich(in, out) ){
-		case -1:
-			errorString("no such parameter", out,"");
-			break;
-
-		case 0:
+		auto sline = split(in,'=');
+		if( sline.size() != 2 ) continue;
+		in = sline[0];
+		out = sline[1];
+		if(in == "sampleType"){
 			if( out == "classification" )
 				param.sampleType = nn_t::classification;
 			else if( out == "regression" )
@@ -183,101 +138,65 @@ bool readnn(const string& path, nnParam &param){
 				errorString(" tpye wrong ", out ,"");
 				return false;
 			}
-			break;
-
-		case 1:
+		}else if(in == "stopTrainingCost"){
 			if( !isFloat(out)) return false;
 			param.stopTrainingCost = atof(out.c_str());
-			break;
-
-		case 2:
+		}else if(in == "trainFeature"){
 			if( !isInt(out)) return false;
 			param.trainFeature = atof(out.c_str());
-			break;
-
-		case 3:
+		}else if(in == "sampleData"){
 			param.sampleData = out.substr(1,out.size()-2);
-			break;
-
-		case 4:
+		}else if(in == "iteration"){
 			if( !isInt(out) ) return false;
 			param.iteration = atoi(out.c_str());
-			break;
-
-		case 5:
+		}else if(in == "learningRate"){
 			if( !isFloat(out) ) return false;
 			param.learningRate = atof(out.c_str());
-			break;
-
-		case 6:
+		}else if(in == "hidden"){
 			if(!readLayerParam_hidden(out, lparam)){
 				errorString(" readnn error ", out,"");
 				return false;
 			}
 			param.hidden.push_back(lparam);
-			break;
-
-		case 7:
+		}else if(in == "output"){
 			if(!readLayerParam_output(out, param.output)){
 				errorString(" readnn error ", out,"");
 				return false;
 			}
-			break;
-
-		case 8:
+		}else if(in == "normalizeMethod"){
 			param.normalizeMethod = out;
-			break;
-
-		case 9:
+		}else if(in == "loadWeight"){
 			if(out == "true") param.loadWeight = true;
 			param.loadWeight = false;
-			break;
-
-		case 10:
+		}else if(in == "saveWeight"){
 			if(out == "true") param.saveWeight = true;
 			param.saveWeight = false;
-			break;
-
-		case 11:
+		}else if(in == "weightPath"){
 			param.weightPath = out;
-			break;
-
-		case 12:
+		}else if(in == "weightName"){
 			param.weightName = out;
-			break;
-
-		case 13:
+		}else if(in == "defaultActivation"){
 			if(out.size() == 0)
 				cout << " readnn error : default activation empty" << endl;
 			param.defaultActivation = out;
-			break;
-
-		case 14:
-			break;
-
-		case 15:
+		}else if(in == "featureOffset"){
+		}else if(in == "trainType"){
 			if(!readnnSampleSet(out, param.trainType, param.trainStart, param.trainEnd, param.trainNumber)){
 				errorString(" readnn trainSample argument error",out,"");
 				return false;
 			}
-			break;
-
-		case 16:
+		}else if(in == "testType"){
 			if(!readnnSampleSet(out, param.testType, param.testStart, param.testEnd, param.testNumber)){
 				errorString(" readnn testSample argument error",out,"");
 				return false;
 			}
-			break;
-
-		case 17:
+		}else if(in == "testStep"){
 			if(!isInt(out)) return false;
 			param.testStep = atoi(out.c_str());
-			break;
-
-		case 18:
+		}else if(in == "costFunction"){
 			param.costFunction = out;
-			break;
-
+		}else{
+			errorString("no such parameter", out,"");
 		}
 
 	}

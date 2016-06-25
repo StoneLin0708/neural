@@ -14,9 +14,9 @@ SRCS = main.cpp sample.cpp neural.cpp nnLayer.cpp plot.cpp nnio.cpp algorithm.cp
 OBJS = $(SRCS:.cpp=.o)
 DBGBIN = neuraldbg
 RELBIN = neural
+
 #
 #library
-#
 #
 LIB = ../stringProcess/build/libstringProcess.a -larmadillo -lmgl
 

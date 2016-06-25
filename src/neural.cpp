@@ -1,8 +1,10 @@
-#include "neural.hpp"
 #include <stringProcess.hpp>
+
+#include "neural.hpp"
 #include "nnfun.hpp"
 #include "nnio.hpp"
 #include "sampleSet.hpp"
+
 #include <unistd.h>
 #include <time.h>
 #include <iostream>
@@ -25,7 +27,6 @@ nn::nn(nnParam param, bool info){
 	}
 }
 
-inline
 void nn::test(){
 	//input to hidden 0
 	Lhidden[0].sum = Linput.out * Lhidden[0].weight;
@@ -40,7 +41,7 @@ void nn::test(){
 	Loutput.act(Loutput.sum, Loutput.out, Loutput.n_node());
 }
 
-inline void nn::clear_wupdates(){
+void nn::clear_wupdates(){
 	Loutput.cost.zeros();
 	Loutput.costnmse.zeros();
 	for(int i=0; i<(int)Lhidden.size(); ++i)
@@ -48,7 +49,7 @@ inline void nn::clear_wupdates(){
 	Loutput.wupdates.zeros();
 }
 
-inline void nn::bp(){
+void nn::bp(){
 	//output to last hidden
 	const int nodeso = Loutput.n_node();
 	//compute delta
@@ -185,7 +186,6 @@ bool nn::gradientChecking(int sample){
 	return true;
 }
 
-inline
 void nn::wupdate(){
 	static int trainNumber = _param.trainNumber;
 	Loutput.weight *= 0.999;
