@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace arma;
+
 namespace nn{
 
     Network::Network(nnParam param, bool info){

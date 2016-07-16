@@ -4,7 +4,6 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-    core/src/layer.cpp \
     core/src/nn.cpp \
     load/src/io.cpp \
     load/src/load.cpp \
@@ -14,10 +13,11 @@ SOURCES += \
     method/src/method.cpp \
     output/src/info.cpp \
     output/src/plot.cpp \
-    load/src/stringProcess.cpp
+    load/src/stringProcess.cpp \
+    main.cpp \
+    core/src/Layer.cpp
 
 HEADERS += \
-    core/include/layer.hpp \
     core/include/nn.hpp \
     load/include/io.hpp \
     load/include/sample.hpp \
@@ -25,6 +25,7 @@ HEADERS += \
     method/include/algorithm.hpp \
     method/include/method.hpp \
     output/include/plot.hpp \
-    load/include/stringProcess.hpp
+    load/include/stringProcess.hpp \
+    core/include/Layer.hpp
 
 DISTFILES +=

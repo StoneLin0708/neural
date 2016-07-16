@@ -1,4 +1,4 @@
-#include "nnLayer.hpp"
+#include "core/include/Layer.hpp"
 
 #include <iostream>
 #include <iomanip>
