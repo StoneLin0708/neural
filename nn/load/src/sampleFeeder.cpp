@@ -1,4 +1,4 @@
-#include "sampleSet.hpp"
+#include "load/include/sampleFeeder.hpp"
 #include <algorithm>
 #include <iostream>
 #include <stdlib.h>
@@ -8,6 +8,37 @@ using std::swap;
 using std::endl;
 using std::cout;
 
+namespace nn{
+
+    sampleFeeder::sampleFeeder(Sample *s, rowvec *in, rowvec *out){
+        this->s = s;
+        this->in = in;
+        this->out = out;
+        n_sample = s->n_sample;
+        n_input = s->n_input;
+        n_output = s->n_output;
+        reset();
+    }
+
+    void sampleFeeder::reset(){
+        iter = 0;
+    }
+
+    void sampleFeeder::next(){
+        for(int i=0; i < n_input; ++i)
+           in->(i) = s->input(iter, i);
+        for(int i=0; i < n_output; ++i)
+           out->(i) = s->output(iter, i);
+        ++iter;
+    }
+
+    bool sampleFeeder::isLast(){
+        return iter == n_sample();
+    }
+
+}
+
+/*
 sampleSet::sampleSet(type Type, param Param){
 	_type = Type;
 	_param.numberOfSample = Param.numberOfSample;
@@ -53,12 +84,10 @@ vector<int> sampleSet::initSet(int size){
 }
 
 int sampleSet::getNext(){
-/*
-	std::cout << ","<<setMax << ','<<lastSetSample << ',' << sampleOffset <<','<< counter_sample <<',' << counter_last << endl;
-	for(int i=0;i<_set.size();++i)
-		cout << _set[i]<<',';
-	cout<<endl;
-*/
+    //std::cout << ","<<setMax << ','<<lastSetSample << ',' << sampleOffset <<','<< counter_sample <<',' << counter_last << endl;
+    //for(int i=0;i<_set.size();++i)
+    //	cout << _set[i]<<',';
+    //cout<<endl;
 	--counter_sample;
 
 
@@ -159,4 +188,5 @@ int sampleSet::getNext(){
 	}
 
 }
+*/
 

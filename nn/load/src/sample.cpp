@@ -1,5 +1,6 @@
-#include "sample.hpp"
-#include <stringProcess.hpp>
+#include "load/include/sample.hpp"
+#include "load/include/stringProcess.hpp"
+
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
@@ -8,100 +9,65 @@
 
 using namespace std;
 
-sample::sample(){
-	_nlabel = 0;
-	_nfeature = 0;
+using std::vector;
+
+namespace nn {
+
+class data_t{
+public:
+    vector<double> input;
+    vector<double> output;
+};
+
+typedef std::vector<data_t> data_v;
+
+Sample::Sample(){
 }
 
-bool sample::readFormat(const string& in, data_t& out){
-	out.label.clear();
-	out.feature.clear();
-	vector<string> lf = split(in,':');
+bool Sample::readFormat(const string& in, data_t& out, data_v &data){
+    out.input.clear();
+    out.output.clear();
+    vector<string> sp = split(in,':');
 	vector<string> l;
-	if(!nolable){
 
-		if( lf.size() != 2){
-			errorString(" sample format error ",in,
-			" ex. label0,label1,...,labelN:feature0,feature1,..., featureN"
-			);
-			return false;
-		}
-		l = split(lf[0],',');
-		if( l.size() == 0){
-			errorString(" sample error ", in," no label");
-			return false;
-		}
-		else if( _nlabel == 0)
-			_nlabel = l.size();
-		else if( l.size() != _nlabel ){
-			errorString(" sample error ", in," label number not equal");
-			return false;
-		}
+    if( sp.size() == 1){
+        auto sInput = split(sp[0],',');
+        if( data.back().input.size() != sInput.size() ) return false;
+        for(int i=0; i<(int)sInput.size(); ++i){
+            if( !isDouble(sInput[i]) ) return false;
+            out.input.push_back( atof( sInput[i].c_str() ) );
+        }
 
-		vector<string> f = split(lf[1],',');
-		if( f.size() == 0){
-			errorString(" sample error ", in," no feature");
-			return false;
-		}
-		else if( _nfeature == 0){
-			_nfeature = f.size();
-		}
-		else if( f.size() != _nfeature ){
-			errorString(" sample error ", in," feature number not equal");
-			return false;
-		}
+    }
+    else if( sp.size() == 2){
+        auto sOutput = split(sp[0],',');
+        auto sInput = split(sp[1],',');
+        if( data.back().input.size() != sInput.size() ) return false;
+        if( data.back().output.size() != sOutput.size() ) return false;
+        for(int i=0; i<(int)sInput.size(); ++i){
+            if( !isDouble(sInput[i]) ) return false;
+            out.input.push_back( atof( sInput[i].c_str() ) );
+        }
+        for(int i=0; i<(int)sOutput.size(); ++i){
+            if( !isDouble(sOutput[i]) ) return false;
+            out.input.push_back( atof( sOutput[i].c_str() ) );
+        }
+    }
+    else
+        return false;
 
-		for(int i = 0; i<(int)_nlabel; ++i){
-			if( !isDouble( l[i] ))
-				return false;
-			out.label.push_back( atof(l[i].c_str()) );
-		}
-
-		for(int i = 0; i<(int)_nfeature; ++i){
-			if( !isDouble( f[i] ))
-				return false;
-			out.feature.push_back( atof(f[i].c_str()) );
-		}
-
-		return true;
-
-	}
-	else{
-		vector<string> f = split(lf[0],',');
-		if( f.size() == 0){
-			errorString(" sample error ", in," no feature");
-			return false;
-		}
-		else if( _nfeature == 0){
-			_nfeature = f.size();
-		}
-		else if( f.size() != _nfeature ){
-			errorString(" sample error ", in," feature number not equal");
-			return false;
-		}
-
-		for(int i = 0; i<(int)_nlabel; ++i){
-			if( !isDouble( l[i] ))
-				return false;
-			out.label.push_back( atof(l[i].c_str()) );
-		}
-
-		for(int i = 0; i<(int)_nfeature; ++i){
-			if( !isDouble( f[i] ))
-				return false;
-			out.feature.push_back( atof(f[i].c_str()) );
-		}
-
-		return true;
-	}
+    return true;
 }
 
-bool sample::read(const string path,bool nolable){
+
+bool Sample::read(const string path){
 	this->nolable = nolable;
     ifstream sample_f;
     sample_f.open(path.c_str(), ios::in);
 	string in;
 	data_t tmp;
+    data_v data;
+    int line = 0;
 
     if ( sample_f.fail() ){
         cout<< "fail to open file : " << path<< endl;
@@ -109,38 +75,43 @@ bool sample::read(const string path,bool nolable){
     }
 
     while( sample_f >> in ){
-		if( readFormat(in,tmp) )
-			_data.push_back(tmp);
-		else
+        line++;
+        if( readFormat(in, tmp, data) )
+            _data.push_back(tmp);
+        else{
+            cout << "sample read fail at line " << line << " : " << in;
 			return false;
+        }
     }
-	/*
-	cout << " output : " << _nlabel;
-	cout << " feature : " << _nfeature;
-	cout << " sample : " << _data.size() << endl;
-	*/
     sample_f.close();
-	_path = path;
+
+    n_sample = data.size();
+    n_input = data[0].input.size();
+    n_output = data[0].output.size();
+
+    input.zeros(data.size(), n_input);
+    output.zeros(data.size(), n_output);
+
+    for(int i=0; i< n_sample; ++i){
+        for(int j=0; j<n_input; ++j)
+            input(i,j) = data[i].input[j];
+        for(int j=0; j<n_output; ++j)
+            output(i,j) = data[i].output[j];
+    }
+
     return true;
 }
 
-void sample::clear(){
-	_data.clear();
-}
+void Sample::list(){
 
-void sample::list(){
-	cout<< " label : " << _nlabel
-		<< " feature : " << _nfeature
-		<< " sample : " << size() << endl;
+    cout<< " input : " << n_input
+        << " output : " << n_output
+        << " size : " << n_sample << endl;
 
-	for(int i=0; i<(int)_data.size(); i++){
-		cout<< "[ ";
-		for(int j=0; j< (int)_nlabel; j++)
-			cout<< setw(5) << _data[i].label[j] << " ,";
-		cout << " : ";
-		for(int j=0; j<(int)_nfeature; j++)
-			cout<< setw(5) << _data[i].feature[j] << " ,";
-		cout<< " ]"  << endl;
+    for(int i=0; i< numberOfSample; i++){
+        cout<< " in:" <<input(i)
+            << " out:" << output(i) <<endl;
 	}
 }
 
+}

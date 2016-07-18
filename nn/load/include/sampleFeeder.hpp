@@ -1,8 +1,32 @@
 #pragma once
+#include <armadillo>
 #include <vector>
+#include "load/include/sample.hpp"
 
 using std::vector;
+using arma::rowvec;
 
+namespace  nn{
+
+    class sampleFeeder{
+    public:
+        sampleFeeder(Sample *, rowvec *in, rowvec *out);
+
+        virtual void reset();
+        virtual void next();
+        virtual bool isLast();
+
+    protected:
+        int iter;
+        int n_sample;
+        int n_input;
+        int n_output;
+        sample *s;
+        rowvec *in;
+        rowvec *out;
+
+    };
+/*
 class sampleSet{
 public:
 	typedef enum{
@@ -43,3 +67,5 @@ private:
 	vector<int> _set;
 	int sampleOffset;
 };
+*/
+}

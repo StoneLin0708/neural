@@ -2,26 +2,29 @@
 //#define ARMA_NO_DEBUG
 #include <math.h>
 #include <armadillo>
+#include <string>
+#include <tuple>
+
 using arma::rowvec;
 
-namespace nn_funa{
+namespace nn{
 
-	void sigmoid(rowvec &in, rowvec &out, int size);
+    namespace fun{
+        typedef rowvec (*fact_t)(rowvec &in, int size);
+        typedef rowvec (*fcost_t)(rowvec &desire, rowvec &out, int size);
 
-	void dsigmoid(rowvec &in, rowvec &out, int size);
+        std::tuple<fact_t, fact_t, bool> find_act(std::string &name);
+        std::tuple<fcost_t, fcost_t, bool> find_cost(std::string &name);
 
-	void tanh(rowvec &in, rowvec &out, int size);
+        rowvec sigmoid(rowvec &in, int size);
+        rowvec dsigmoid(rowvec &in, int size);
 
-	void dtanh(rowvec &in, rowvec &out, int size);
+        rowvec tanh(rowvec &in, int size);
+        rowvec dtanh(rowvec &in, int size);
 
-}
+        rowvec mse(rowvec &desire, rowvec &out, int size);
+        rowvec dmse(rowvec &desire, rowvec &out, int size);
 
-namespace nn_func{
-	double mse(double desire, double out);
+    }
 
-	double dmse(double desire, double out);
-
-	double nmse(double desire, double out);
-
-	double dnmse(double desire, double out);
 }

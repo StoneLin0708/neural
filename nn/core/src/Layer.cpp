@@ -10,136 +10,35 @@ using arma::zeros;
 
 namespace nn{
 
-	IOLayer::IOLayer(rowvec *outputs, int offset, int start){
+    BaseLayer::BaseLayer(int Layer, int Nodes){
+        this->Layer = Layer;
+        this->Nodes = Nodes;
+        out.zeros(Nodes+1);
+        out(Nodes-1) = 1;
+    }
 
-	}
+    CalLayer::CalLayer(int Layer, int Nodes, int Input, fun::fact_t act, fun::fact_t dact)
+        : BaseLayer( Layer, Nodes){
+        weight.zeros(Input, Nodes+1);
+        sum.zeros(Nodes+1);
 
-	nnLayerInput::nnLayerInput(){
-		_init=false;
-	}
+        delta.zeros(Nodes+1);
+        wupdate.zeros(Input, Nodes+1);
+        wupdates.zeros(Input, Nodes+1);
 
-	nnLayerInput::nnLayerInput(int node, rowvec *features, int offset){
-		if(node < 1 || offset < 1 || (int)features->n_cols < node){
-			cout<< "input init fail : " << endl
-				<< "node = " << node << endl
-				<< "offset = " << offset << endl
-				<< "features.n_cols = " << (int)features->n_cols<< endl;
-			_init = false;
-		}
-		else{
-			_node = node+1;
-			_offset = offset;
-			_features = features;
+        fact = act;
+        fdact = dact;
+    }
 
-			out.zeros(_node);
-			out(_node-1) = 1;
-			_init = true;
-		}
-	}
+    void CalLayer::fp(rowvec *In){
+        sum = *In * weight;
+        out = fact(sum , Nodes);
+    }
 
-	void nnLayerInput::setFeatures(int Nth){
-		static const int nfeature = _node-1;
-		int offsetN = _offset*Nth;
-		for(int i=0; i<nfeature; ++i){
-			//cout << "in  get:"<<offsetN+i<<endl;
-			out(i) = (*_features)( offsetN + i );
-		}
-	}
+    void OutputLayer::bp(rowvec *UpDelta){
+        fdcost(desire, out, delta, Nodes);
+        fdact( sum, out, delta, Nodes);
 
-	nnLayerHidden::nnLayerHidden(){
-		_init = false;
-	}
-
-	nnLayerHidden::nnLayerHidden(
-			int node, int input,int wmin, int wmax,
-			void (*act)(rowvec &in, rowvec &out, int size),
-			void (*dact)(rowvec &in, rowvec &out, int size)){
-		if(input<1 || node<1 || wmin > wmax){
-			cout<< "hidden init fail : " << endl
-				<< "node = " << node << endl
-				<< "input = " << input << endl
-				<< "wmin,wmax = " << wmin << ',' << wmax << endl;
-			_init = false;
-		}
-		else{
-			this->act = act;
-			this->dact = dact;
-
-			_node = node+1;
-			_input = input;
-
-			weight = randu(_input, _node)*(wmax-wmin);
-			mat mmin(_input, _node);
-			mmin.fill(wmin);
-			weight += mmin;
-
-			sum = zeros<rowvec>(_node);
-			out = zeros<rowvec>(_node);
-			out(_node-1) = 1;
-
-			delta = zeros<rowvec>(_node);
-			wupdate = zeros<mat>(_input, _node);
-			wupdates = zeros<mat>(_input, _node);
-			_init = true;
-		}
-	}
-
-
-	nnLayerOutput::nnLayerOutput(){
-		_init=false;
-	}
-
-	nnLayerOutput::nnLayerOutput(
-			int node, int input,int wmin, int wmax,
-			rowvec *outputs,int offset, int start,
-			void (*act)(rowvec &in, rowvec &out, int size),
-			void (*dact)(rowvec &in, rowvec &out, int size)){
-		if(input<1 || node<1 || wmin > wmax){
-			cout<< "output init fail : " << endl
-				<< "node = " << node << endl
-				<< "input = " << input << endl
-				<< "wmin,wmax = " << wmin << ',' << wmax << endl;
-			_init = false;
-		}
-		else{
-			this->act = act;
-			this->dact = dact;
-			_node = node;
-			_input = input;
-
-			_offset = offset;
-			_start = start;
-			_outputs = outputs;
-
-			desireOut = zeros<rowvec>(_node);
-
-			weight = randu(_input, _node)*(wmax-wmin);
-			mat mmin(_input, _node);
-			mmin.fill(wmin);
-			weight += mmin;
-
-			sum = zeros<rowvec>(_node);
-			out = zeros<rowvec>(_node);
-
-			delta = zeros<rowvec>(_node);
-			wupdate = zeros<mat>(_input, _node);
-			wupdates = zeros<mat>(_input, _node);
-
-			cost = zeros<rowvec>(_node);
-			costnmse = zeros<rowvec>(_node);
-
-			_init = true;
-		}
-	}
-
-
-	void nnLayerOutput::setOutput(int Nth){
-		int offsetN = _offset*Nth;
-		//cout << "get O " << offsetN << " to " << offsetN + _node-1 << endl;
-		for(int i=0; i<_node; ++i){
-			//cout << "out get:"<<offsetN+i+_start<<endl;
-			desireOut(i) = (*_outputs)( offsetN + i + _start);
-		}
-	}
+    }
 
 }

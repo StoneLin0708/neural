@@ -2,8 +2,8 @@
 
 #include "core/include/nn.hpp"
 #include "method/include/method.hpp"
-#include "load/include/io.hpp"
-#include "load/include/sampleSet.hpp"
+#include "load/include/Loader.hpp"
+#include "load/include/sampleFeeder.hpp"
 
 #include <unistd.h>
 #include <time.h>
@@ -17,19 +17,17 @@ using namespace arma;
 
 namespace nn{
 
-    Network::Network(nnParam param, bool info){
-        _init = true;
-        _param = param;
-        //readnn(path, _param);
-        if(!enableParam())
-            _init = false;
-        if(info){
-            show();
-            showParam();
-        }
+    Network::Network(){
     }
 
     void Network::test(){
+
+        for(int i=1; i < Layer.size(); ++i){
+            auto L = static_cast<CalLayer*>(Layer[i]);
+            L->sum = Layer[i-1].out * L->weight;
+            L->act();
+        }
+        /*
         //input to hidden 0
         Lhidden[0].sum = Linput.out * Lhidden[0].weight;
         Lhidden[0].act(Lhidden[0].sum, Lhidden[0].out, Lhidden[0].n_node()-1);
@@ -41,6 +39,7 @@ namespace nn{
         //hidden n to output
         Loutput.sum = Lhidden.back().out * Loutput.weight;
         Loutput.act(Loutput.sum, Loutput.out, Loutput.n_node());
+        */
     }
 
     void Network::clear_wupdates(){
@@ -52,17 +51,24 @@ namespace nn{
     }
 
     void nn::bp(){
+        for(int i=Layer.size(); i>0; --i){
+
+        }
         //output to last hidden
         const int nodeso = Loutput.n_node();
         //compute delta
         Loutput.dact( Loutput.sum , Loutput.delta, nodeso);
         for(int i=0; i<nodeso; ++i)
             Loutput.delta(i) *= dcost(Loutput.desireOut(i), Loutput.out(i));
+
+        /*
         //compute cost
         for(int i=0; i<nodeso; ++i)
             Loutput.cost(i) += cost(Loutput.desireOut(i), Loutput.out(i));
         for(int i=0; i<nodeso; ++i)
             Loutput.costnmse(i) += nn_func::nmse(Loutput.desireOut(i), Loutput.out(i));
+         */
+
         //compute wupdate
         const int nodeht = Lhidden.back().n_node();
         for(int i=0; i<nodeso; ++i)
@@ -107,7 +113,7 @@ namespace nn{
         }
     }
 
-    bool nn::gradientChecking(int sample){
+    bool gradientChecking(int sample){
         if(sample == -1)
             sample = _n_sample;
         double delta = 1.0e-4;
@@ -188,7 +194,7 @@ namespace nn{
         return true;
     }
 
-    void nn::wupdate(){
+    void Network::wupdate(){
         static int trainNumber = _param.trainNumber;
         Loutput.weight *= 0.999;
         Loutput.weight += Loutput.wupdates/trainNumber;
@@ -198,7 +204,9 @@ namespace nn{
         }
     }
 
-    void nn::error(int &i){
+//error
+/*
+    void Network::error(int &i){
         static int ep = ceil((double)iteration/1000);
         static double last_t = clock();
         static double last_c = 0;
@@ -229,7 +237,7 @@ namespace nn{
         if( show ){
             cout.flush();
             int spendTime = (int)((clock()-startTime)/CLOCKS_PER_SEC);
-            cout<< /*'\r'<<*/ " iteration : " <<  setw(7) << i
+            cout<< '\r'<< " iteration : " <<  setw(7) << i
                 <<" average cost : " << setw(7) << errs
                 <<" nmse : " << setw(7) << nmse
                 <<" cost rate : " << setw(7) << abs(errs-last_c)
@@ -245,47 +253,6 @@ namespace nn{
             en.push_back(nmse);
         }
     }
-
-    void nn::train(){
-        /*
-        for(int i=0; i<_n_sample; ++i)
-            cout << outputs(i) << " : " << features[i];
-            */
-        sampleSet::param param = {_n_sample,_param.trainStart,_param.trainEnd,_param.trainNumber};
-        sampleSet sampleSet( _param.trainType ,param);
-
-        int s;
-        for(int i=0; i<iteration; ++i){
-        //for(int i=0; i<2; ++i){
-            clear_wupdates();
-            while(!sampleSet.last()){
-                s = sampleSet.getNext();
-        /*
-        cout<< "-----------iteration" << i << "-----------" << endl;
-                cout << "sample : " << s<<endl;
-                cin.get();
-        cout<< "-----------forword--------------" << endl;
-        */
-                Linput.setFeatures(s);
-                test();
-        //cout<< "-----------bp-------------------" << endl;
-                Loutput.setOutput(s);
-                bp();
-    /*
-                cout <<"s=" << s <<Linput.out << Loutput.desireOut << endl;
-                cin.get();
-                */
-            }
-            error(i);
-            wupdate();
-            //if(i%1000 ==1000)
-                //testResult();
-        }
-        /*
-        cout << Loutput.weight << endl;
-        cout << Lhidden[0].weight << endl;
-        */
-        cout << endl;
-    }
+*/
 
 }

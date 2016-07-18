@@ -1,3 +1,4 @@
+/*
 #include "neural.hpp"
 #include <iostream>
 #include <iomanip>
@@ -47,6 +48,7 @@ void nn::showParam(){
 
 
 }
+*/
 /*
 void nn::showd(){
 	int i;

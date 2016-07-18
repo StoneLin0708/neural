@@ -1,3 +1,4 @@
+/*
 #include <mgl2/mgl.h>
 #include <math.h>
 #include "sample.hpp"
@@ -179,3 +180,4 @@ double drawError(nn& n, int iteration, string name)
 	return 0;
 }
 
+*/

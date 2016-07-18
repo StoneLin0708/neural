@@ -1,5 +1,6 @@
 #include <armadillo>
 #include <string>
+#include <method/include/method.hpp>
 
 using std::string;
 using arma::rowvec;
@@ -7,32 +8,23 @@ using arma::mat;
 
 namespace nn{
 
-    typedef struct LayerParam{
-        int level;
-        int nodes;
-        string activation;
-        bool operator<(const layerParam &a){
-            return level < a.level;
-        }
-    }LayerParam;
-
     class BaseLayer{
     public:
-        BaseLayer();
+        BaseLayer(int Layer, int Nodes);
 
-        int Layer;
         rowvec out;
 
-        const int nodes;
+        int Layer;
+        int Nodes;
 
     };
 
     class CalLayer : public BaseLayer{
 	public:
-        CalLayer(int node, int input,
-				void (*act)(rowvec &in, rowvec &out, int size),
-				void (*dact)(rowvec &in, rowvec &out, int size));
-        bool success(){return _init;};
+        CalLayer(int Layer, int Nodes, int Input,
+                 fun::fact_t act, fun::fact_t dact);
+
+        int Input;
 
 		//forward
 		mat weight;
@@ -43,20 +35,17 @@ namespace nn{
 		mat wupdate;
 		mat wupdates;
 
-        const int n_input() {return input;};
-        const int n_node(){return nodes;};
-
 		void act();
 		void dact();
         void randomWeight(int wmin, int wmax);
 
+        void fp(rowvec *In);
+        virtual void bp(rowvec *UpDelta) = 0;
+
 	protected:
-		bool _init;
 
-        int input;
-
-		void (*fact)(rowvec &in, rowvec &out, int size);
-		void (*fdact)(rowvec &in, rowvec &out, int size);
+        fun::fact_t fact;
+        fun::fact_t fdact;
 
 	};
 
@@ -68,22 +57,26 @@ namespace nn{
 
     class HiddenLayer : public CalLayer{
 	public:
-        HiddenLayer(
-                int node, int input,
-				void (*act)(rowvec &in, rowvec &out, int size),
-				void (*dact)(rowvec &in, rowvec &out, int size));
+        HiddenLayer(int Layer, int Nodes, int Input,
+                 fun::fact_t act, fun::fact_t dact);
+        void bp(rowvec *UpDelta);
 
 	};
 
     class OutputLayer : public CalLayer{
 	public:
-        OutputLayer(
-                int node, int input,
-				void (*act)(rowvec &in, rowvec &out, int size),
-				void (*dact)(rowvec &in, rowvec &out, int size));
+        OutputLayer(int Layer, int Nodes, int Input,
+                 fun::fact_t act, fun::fact_t dact,
+                 fun::fcost_t cost, fun::fcost_t dcost
+                    );
+        void bp(rowvec *UpDelta = nullptr);
 
+        rowvec desire;
 
-		//mat error;
+        fun::fcost_t fcost;
+        fun::fcost_t fdcost;
+
+        //mat error;
 		rowvec cost;
 		rowvec costnmse;
 

@@ -1,43 +1,28 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <armadillo>
 
-using std::vector;
 using std::string;
 
-class data_t{
+namespace  nn{
+
+class Sample{
 public:
-	vector<double> label;
-	vector<double> feature;
-};
+    Sample();
 
-typedef std::vector<data_t> data_v;
+    bool read(const string path);
 
-class sample{
-public:
-	sample();
-
-	bool read(const string path,bool nolable=false);
-	bool save();
-	bool saveTo(const char* path);
-
-	data_t& operator[](int i){return _data[i];};
-	size_t size(){return _data.size();};
-
-	void clear();
+    arma::mat input;
+    arma::mat output;
 
 	void list();
 
-	size_t n_label(){return _nlabel;};
-	size_t n_feature(){return _nfeature;};
+    int n_sample;
+    int n_input;
+    int n_output;
 
-private:
-	size_t _nlabel;
-	size_t _nfeature;
-	bool nolable;
-	data_v _data;
-	std::string _path;
-	bool readFormat(const string& in, data_t& out);
 
 };
 
+}
