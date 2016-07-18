@@ -24,7 +24,7 @@ typedef std::vector<data_t> data_v;
 Sample::Sample(){
 }
 
-bool Sample::readFormat(const string& in, data_t& out, data_v &data){
+static bool readFormat(const string& in, data_t& out, data_v &data){
     out.input.clear();
     out.output.clear();
     vector<string> sp = split(in,':');
@@ -61,7 +61,6 @@ bool Sample::readFormat(const string& in, data_t& out, data_v &data){
 
 
 bool Sample::read(const string path){
-	this->nolable = nolable;
     ifstream sample_f;
     sample_f.open(path.c_str(), ios::in);
 	string in;
@@ -77,7 +76,7 @@ bool Sample::read(const string path){
     while( sample_f >> in ){
         line++;
         if( readFormat(in, tmp, data) )
-            _data.push_back(tmp);
+            data.push_back(tmp);
         else{
             cout << "sample read fail at line " << line << " : " << in;
 			return false;
@@ -108,7 +107,7 @@ void Sample::list(){
         << " output : " << n_output
         << " size : " << n_sample << endl;
 
-    for(int i=0; i< numberOfSample; i++){
+    for(int i=0; i< n_sample; i++){
         cout<< " in:" <<input(i)
             << " out:" << output(i) <<endl;
 	}

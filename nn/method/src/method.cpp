@@ -9,11 +9,11 @@ using namespace std;
 namespace nn{
     namespace fun{
 
-        static void noact(rowvec &in, rowvec &out, int size){
+        static rowvec noact(rowvec &, int ){
             abort();
         }
 
-        static void nocost(rowvec &desire, rowvec &out, rowvec &cost, int size){
+        static rowvec nocost(rowvec &, rowvec &, int ){
             abort();
         }
 

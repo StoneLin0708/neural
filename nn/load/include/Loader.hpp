@@ -1,15 +1,15 @@
 #include "core/include/nn.hpp"
 #include "method/include/method.hpp"
 #include "load/include/sample.hpp"
+#include "trainer.hpp"
 
 #include <string>
-
-using std::string;
+#include <map>
 
 namespace nn_t{
 
     struct activation{
-        string name;
+        std::string name;
         double (*act)(double);
         double (*dact)(double);
     };
@@ -24,9 +24,14 @@ namespace nn_t{
 }
 
 namespace  nn{
+    typedef std::map<std::string,std::string> nnFile_t;
 
-    bool loadNetwork(vector<string> file, Network &n);
-    bool loadSample(vector<string> file, Sample &train, Sample &test);
-    void loadTrain();
+    bool nnLoad(const string& path, Network &, Sample &, Trainer &);
+
+    bool nnFileRead(const string& path, nnFile_t&);
+
+    bool loadNetwork(nnFile_t&, Network &n);
+    bool loadSample(nnFile_t&, Sample &train, Sample &test);
+    void loadTrain(nnFile_t&, Trainer&);
 
 }

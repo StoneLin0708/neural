@@ -21,7 +21,7 @@ namespace  nn{
         int n_sample;
         int n_input;
         int n_output;
-        sample *s;
+        Sample *s;
         rowvec *in;
         rowvec *out;
 

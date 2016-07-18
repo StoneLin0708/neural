@@ -26,14 +26,14 @@ namespace nn{
 
     void sampleFeeder::next(){
         for(int i=0; i < n_input; ++i)
-           in->(i) = s->input(iter, i);
+           (*in)(i) = s->input(iter, i);
         for(int i=0; i < n_output; ++i)
-           out->(i) = s->output(iter, i);
+           (*out)(i) = s->output(iter, i);
         ++iter;
     }
 
     bool sampleFeeder::isLast(){
-        return iter == n_sample();
+        return iter == n_sample;
     }
 
 }

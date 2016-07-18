@@ -16,11 +16,11 @@ int main(int argc,char* argv[]){
 
     nn::Network ann();
 
-    nn::Load( path, ann );
+    //nn::Load( path, ann );
 
-    if(!nn::gradientChecking()) return -1;
+    //if(!nn::gradientChecking()) return -1;
 
-	n.train();
+    //n.train();
 
 	return 0;
 }

@@ -21,11 +21,8 @@ namespace nn{
     }
 
     void Network::test(){
-
-        for(int i=1; i < Layer.size(); ++i){
-            auto L = static_cast<CalLayer*>(Layer[i]);
-            L->sum = Layer[i-1].out * L->weight;
-            L->act();
+        for(int i=1; i < (int)Layer.size(); ++i){
+            static_cast<CalLayer*>(&Layer[i])->fp( &Layer[i-1].out );
         }
         /*
         //input to hidden 0
@@ -42,18 +39,12 @@ namespace nn{
         */
     }
 
-    void Network::clear_wupdates(){
-        Loutput.cost.zeros();
-        Loutput.costnmse.zeros();
-        for(int i=0; i<(int)Lhidden.size(); ++i)
-            Lhidden[i].wupdates.zeros();
-        Loutput.wupdates.zeros();
-    }
-
-    void nn::bp(){
-        for(int i=Layer.size(); i>0; --i){
-
+    void Network::bp(){
+        static_cast<OutputLayer*>(&Layer.back())->bp( &Layer[Layer.size()-2].out );
+        for(int i=Layer.size()-1; i>0; --i){
+            static_cast<HiddenLayer*>(&Layer[i-1])->bp( &Layer[i-2].out, static_cast<CalLayer*>(&Layer[i]) );
         }
+        /*
         //output to last hidden
         const int nodeso = Loutput.n_node();
         //compute delta
@@ -61,13 +52,11 @@ namespace nn{
         for(int i=0; i<nodeso; ++i)
             Loutput.delta(i) *= dcost(Loutput.desireOut(i), Loutput.out(i));
 
-        /*
         //compute cost
         for(int i=0; i<nodeso; ++i)
             Loutput.cost(i) += cost(Loutput.desireOut(i), Loutput.out(i));
         for(int i=0; i<nodeso; ++i)
             Loutput.costnmse(i) += nn_func::nmse(Loutput.desireOut(i), Loutput.out(i));
-         */
 
         //compute wupdate
         const int nodeht = Lhidden.back().n_node();
@@ -111,8 +100,16 @@ namespace nn{
             deltaU = &(Lhidden[layer].delta);
             nodesU = nodesh;
         }
+        */
     }
 
+    void Network::update(){
+        for(int i=Layer.size()-1; i>0; ++i){
+            static_cast<CalLayer*>(&Layer[i])->update();
+        }
+    }
+
+/* gradientChecking
     bool gradientChecking(int sample){
         if(sample == -1)
             sample = _n_sample;
@@ -168,7 +165,6 @@ namespace nn{
                     fwd /= 2*delta*sample;
                     //cout << j << ',' << i << ",fw="<<fw<<",fwd="<< fwd<<endl;
                     if( abs(fwd - fw) > errorMax ){
-                        /*
                         if(l==layers-1)
                             cout<< "gradient check fail at layer output weight("<<j<<","<<i<<")"
                                 <<" fw="<< fw <<" fwd="<< fwd
@@ -177,7 +173,6 @@ namespace nn{
                             cout<< "gradient check fail at layer hidden["<< l+1 <<"] weight("<<j<<","<<i<<")"
                                 <<" fw="<< fw <<" fwd="<< fwd
                                 << " fw/fwd=" << fw/fwd <<endl;
-                                */
                         //return false;
                     }
                 }
@@ -193,19 +188,9 @@ namespace nn{
         cout << "gradient check success "<<endl;
         return true;
     }
+    */
 
-    void Network::wupdate(){
-        static int trainNumber = _param.trainNumber;
-        Loutput.weight *= 0.999;
-        Loutput.weight += Loutput.wupdates/trainNumber;
-        for(int i=0; i<(int)Lhidden.size(); ++i){
-            Lhidden[i].weight *= 0.999;
-            Lhidden[i].weight += Lhidden[i].wupdates/trainNumber;
-        }
-    }
-
-//error
-/*
+/* error
     void Network::error(int &i){
         static int ep = ceil((double)iteration/1000);
         static double last_t = clock();

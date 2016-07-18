@@ -1,4 +1,4 @@
-#include "algorithm.hpp"
+#include "method/include/algorithm.hpp"
 #include <float.h>
 
 using namespace arma;

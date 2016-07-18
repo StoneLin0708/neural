@@ -3,7 +3,6 @@
 
 #include "load/include/sampleFeeder.hpp"
 
-#include <map>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -14,65 +13,72 @@
 using namespace std;
 
 namespace nn{
-
+/* Param
     typedef struct Param{
-        nn_t::output_t sampleType;			/*0*/
-        double stopTrainingCost;			/*1*/
-        double trainFeature;				/*2*/
-        string sampleData;					/*3*/
+        nn_t::output_t sampleType;
+        double stopTrainingCost;
+        double trainFeature;
+        string sampleData;
 
-        int iteration;						/*4*/
-        double learningRate;				/*5*/
-        vector<struct layerParam> hidden;	/*6*/
-        struct layerParam output;			/*7*/
+        int iteration;
+        double learningRate;
+        vector<struct layerParam> hidden;
+        struct layerParam output;
 
-        string normalizeMethod;				/*8*/
-        bool loadWeight;					/*9*/
-        bool saveWeight;					/*10*/
-        string weightPath;					/*11*/
+        string normalizeMethod;
+        bool loadWeight;
+        bool saveWeight;
+        string weightPath;
 
-        string weightName;					/*12*/
-        string defaultActivation;			/*13*/
-        int featureOffset;					/*14*/
+        string weightName;
+        string defaultActivation;
+        int featureOffset;
 
-        sampleSet::type trainType;			/*15*/
-        int trainStart;						/*15*/
-        int trainEnd;						/*15*/
-        int trainNumber;					/*15*/
+        sampleSet::type trainType;
+        int trainStart;
+        int trainEnd;
+        int trainNumber;
 
-        sampleSet::type testType;				/*16*/
-        int testStart;						/*16*/
-        int testEnd;						/*16*/
-        int testNumber;						/*16*/
+        sampleSet::type testType;
+        int testStart;
+        int testEnd;
+        int testNumber;
 
-        int testStep;						/*17*/
-        string costFunction;				/*18*/
+        int testStep;
+        string costFunction;
     }Param;
+*/
+    bool nnLoad(const string& path, Network &n, Sample &){
+        nnFile_t nnf;
+        nnFileRead(path, nnf);
+        loadNetwork(nnf, n);
+        //loadSample();
+        return true;
+    }
 
-    bool nnRead(const string& path, Network &n, Sample &){
+    bool nnFileRead(const string& path, nnFile_t& nnf){
         ifstream fnn;
         fnn.open(path.c_str(), ios::in);
         string in;
-        map<string,string> mp;
         while( getline(fnn,in) ){
             removeChar(in,'\n');
             replaceChar(in, '\t', ' ');
             removeChar(in, ' ');
             if(in[0] == '#' ||in[0] == '\0') continue;
-            auto sp = split(in,'='); if(sp.size() != 2) return false;
-            auto re  = mp.insert( sp[0], sp[0] );
-            if( !re.second ) return false;
+            auto sp = split(in,'='); if(sp.size() != 2){fnn.close();return false;}
+            auto re  = nnf.insert( make_pair(sp[0], sp[1]) );
+            if( !re.second ){fnn.close(); return false;}
         }
-
-        loadNetwork(mp, n);
-        loadSample();
-
+        fnn.close();
+        return true;
     }
 
-    bool loadNetwork(map<string,string> &mp, Network &n){
+    bool loadNetwork(nnFile_t &mp, Network &n){
         if( !isInt( mp["InputLayer"] )) return false;
         n.Layer.push_back( InputLayer( atof(mp["InputLayer"].c_str()) ) );
 
+        if(!isDouble( mp["LearningRate"] )) return false;
+        double LR = atof(mp["LearningRate"].c_str());
         int hidden=1;
         stringstream ss;
         string s;
@@ -83,24 +89,27 @@ namespace nn{
             auto sp = split( mp[s], ',');
             if( sp.size() == 0) break; if( sp.size() != 2) return false;
             if(!isInt(sp[0])) return false;
-            auto act = funact::find( sp[1] ); if(!get<2>(act)) return false;
+            auto act = fun::find_act( sp[1] ); if(!get<2>(act)) return false;
             n.Layer.push_back(HiddenLayer(
-                                hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes,
+                                hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes, LR,
                                 get<0>(act), get<1>(act) ) );
         }
         auto sp = split( mp["OutputLayer"], ',');
         if( sp.size() == 0) return false; if( sp.size() != 2) return false;
         if(!isInt(sp[0])) return false;
-        auto act = funact::find( sp[1] ); if(!get<2>(act)) return false;
+        auto act = fun::find_act( sp[1] ); if(!get<2>(act)) return false;
+        auto cost = fun::find_cost( mp["CostFunction"] ); if(!get<2>(cost)) return false;
         n.Layer.push_back(OutputLayer(
-                            hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes,
-                            get<0>(act), get<1>(act) ) );
+                            hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes, LR,
+                            get<0>(act), get<1>(act),
+                            get<0>(cost), get<1>(cost) ) );
+        return true;
     }
 
-    bool loadSample(map<string,string> &mp, Sample &train, Sample &test){
+    bool loadSample(nnFile_t &mp, Sample &train, Sample &test){
         if( !train.read(mp["TrainSample"]) ) return false;
         if( !test.read(mp["TestSample"]) ) cout << "no test data" << endl;
-
+        return true;
     }
 
 

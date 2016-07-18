@@ -21,26 +21,27 @@ namespace nn{
 
     class CalLayer : public BaseLayer{
 	public:
-        CalLayer(int Layer, int Nodes, int Input,
+        CalLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact);
 
-        int Input;
+        int Inputs;
 
 		//forward
 		mat weight;
 		rowvec sum;
 
 		//trainig
+        double LearningRate;
 		rowvec delta;
 		mat wupdate;
 		mat wupdates;
 
+        void update();
 		void act();
 		void dact();
         void randomWeight(int wmin, int wmax);
 
         void fp(rowvec *In);
-        virtual void bp(rowvec *UpDelta) = 0;
 
 	protected:
 
@@ -51,34 +52,32 @@ namespace nn{
 
     class InputLayer : public BaseLayer{
 	public:
-        InputLayer(int node);
+        InputLayer(int Nodes);
 
 	};
 
     class HiddenLayer : public CalLayer{
 	public:
-        HiddenLayer(int Layer, int Nodes, int Input,
+        HiddenLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact);
-        void bp(rowvec *UpDelta);
+        void bp(rowvec *LowOut, CalLayer *UpLayer);
 
 	};
 
     class OutputLayer : public CalLayer{
 	public:
-        OutputLayer(int Layer, int Nodes, int Input,
+        OutputLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact,
                  fun::fcost_t cost, fun::fcost_t dcost
                     );
-        void bp(rowvec *UpDelta = nullptr);
+        void bp(rowvec *LowOut);
 
         rowvec desire;
 
         fun::fcost_t fcost;
         fun::fcost_t fdcost;
 
-        //mat error;
 		rowvec cost;
-		rowvec costnmse;
 
 
 	};
