@@ -118,6 +118,7 @@ namespace nn{
         this->cost.zeros(Nodes);
         this->fcost = cost;
         this->fdcost = dcost;
+        out = out.subvec(0,Nodes-1);
     }
 
     void OutputLayer::operator=(const OutputLayer &o){
