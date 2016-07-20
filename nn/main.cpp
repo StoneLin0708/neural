@@ -1,26 +1,26 @@
-#include "core/include/nn.hpp"
+#include "ANNModel.hpp"
 
 #include <string>
 #include <iostream>
 
 using namespace std;
 
+int main(int argc, char* argv[]){
 
-int main(int argc,char* argv[]){
     if(argc != 2){
-        cout <<"data  ,result name" << endl;
-		return -1;
-	}
+        cout <<"data" << endl;
+        return -1;
+    }
 
-	string path = argv[1];
+    string path(argv[1]);
 
-    nn::Network ann();
+    nn::ANNModel nnm;
 
-    //nn::Load( path, ann );
+    if(!nnm.load(path)) return -1;
 
     //if(!nn::gradientChecking()) return -1;
 
-    //n.train();
+    nnm.trainer.train();
 
-	return 0;
+    return 0;
 }

@@ -3,7 +3,7 @@
 #include "core/include/nn.hpp"
 #include "method/include/method.hpp"
 #include "load/include/Loader.hpp"
-#include "load/include/sampleFeeder.hpp"
+#include "load/include/SampleFeeder.hpp"
 
 #include <unistd.h>
 #include <time.h>
@@ -11,18 +11,30 @@
 #include <iomanip>
 #include <fstream>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 using namespace arma;
 
 namespace nn{
 
-    Network::Network(){
-    }
+Network::Network(){
+}
 
-    void Network::test(){
+Network::~Network()
+{
+    assert(Layer.size()>2 || Layer.size() == 0);
+    if(Layer.size() != 0){
+        delete static_cast<InputLayer*>(Layer[0]);
+        for(int i=0; i<(int)Layer.size()-2;++i)
+            delete static_cast<HiddenLayer*>(Layer[i]);
+        delete static_cast<OutputLayer*>(Layer.back());
+    }
+}
+
+    void Network::fp(){
         for(int i=1; i < (int)Layer.size(); ++i){
-            static_cast<CalLayer*>(&Layer[i])->fp( &Layer[i-1].out );
+            static_cast<CalLayer*>(Layer[i])->fp( &(Layer[i-1]->out) );
         }
         /*
         //input to hidden 0
@@ -40,9 +52,9 @@ namespace nn{
     }
 
     void Network::bp(){
-        static_cast<OutputLayer*>(&Layer.back())->bp( &Layer[Layer.size()-2].out );
-        for(int i=Layer.size()-1; i>0; --i){
-            static_cast<HiddenLayer*>(&Layer[i-1])->bp( &Layer[i-2].out, static_cast<CalLayer*>(&Layer[i]) );
+        static_cast<OutputLayer*>(Layer.back())->bp( &Layer[Layer.size()-2]->out );
+        for(int i=Layer.size()-2; i>0; --i){
+            static_cast<HiddenLayer*>(Layer[i])->bp( &Layer[i-1]->out, static_cast<CalLayer*>(Layer[i+1]) );
         }
         /*
         //output to last hidden
@@ -104,8 +116,8 @@ namespace nn{
     }
 
     void Network::update(){
-        for(int i=Layer.size()-1; i>0; ++i){
-            static_cast<CalLayer*>(&Layer[i])->update();
+        for(int i=Layer.size()-1; i>0; --i){
+            static_cast<CalLayer*>(Layer[i])->update();
         }
     }
 

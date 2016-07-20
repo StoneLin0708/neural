@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
+#include "method/include/Normailze.hpp"
 
 using std::string;
 
@@ -16,7 +17,11 @@ public:
     arma::mat input;
     arma::mat output;
 
-	void list();
+    std::vector<double> outputMap;
+    NormParam norm_in;
+    NormParam norm_out;
+
+    void list();
 
     int n_sample;
     int n_input;

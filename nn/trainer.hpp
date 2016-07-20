@@ -1,12 +1,21 @@
-#ifndef TRAINER_H
-#define TRAINER_H
+#pragma once
 #include <core/include/nn.hpp>
-#include <load/include/sampleFeeder.hpp>
+#include <load/include/SampleFeeder.hpp>
 
-class Trainer
-{
-public:
-    Trainer();
-};
+namespace  nn{
 
-#endif // TRAINER_H
+    class Trainer
+    {
+    public:
+        Trainer();
+        virtual ~Trainer();
+        void set(Network *, Sample *);
+        void train();
+        Network *n;
+        SampleFeeder *sf;
+
+        int iteration;
+        double minCost;
+    };
+
+}

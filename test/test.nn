@@ -1,0 +1,9 @@
+TrainSample=test/sample
+SampleType=Classification
+LearningRate=1
+InputLayer=2
+HiddenLayer1=4,sigmoid
+HiddenLayer2=2,sigmoid
+OutputLayer=2,sigmoid
+CostFunction=mse
+Iteration=1000

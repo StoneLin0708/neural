@@ -1,8 +1,8 @@
-#include "load/include/stringProcess.hpp"
+#include "load/include/StringProcess.hpp"
 #include "load/include/Loader.hpp"
-
-#include "load/include/sampleFeeder.hpp"
-
+#include "method/include/Normailze.hpp"
+#include "load/include/SampleFeeder.hpp"
+#include <armadillo>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -13,17 +13,11 @@
 using namespace std;
 
 namespace nn{
+
 /* Param
     typedef struct Param{
         nn_t::output_t sampleType;
         double stopTrainingCost;
-        double trainFeature;
-        string sampleData;
-
-        int iteration;
-        double learningRate;
-        vector<struct layerParam> hidden;
-        struct layerParam output;
 
         string normalizeMethod;
         bool loadWeight;
@@ -31,7 +25,6 @@ namespace nn{
         string weightPath;
 
         string weightName;
-        string defaultActivation;
         int featureOffset;
 
         sampleSet::type trainType;
@@ -45,20 +38,26 @@ namespace nn{
         int testNumber;
 
         int testStep;
-        string costFunction;
     }Param;
 */
-    bool nnLoad(const string& path, Network &n, Sample &){
+
+    bool nnLoad(const string& path, Network &n, Sample &s, Trainer &t){
         nnFile_t nnf;
-        nnFileRead(path, nnf);
-        loadNetwork(nnf, n);
-        //loadSample();
+        if(!nnFileRead(path, nnf)){ cout << "nnFile fail" <<endl; return false;}
+
+        if(!loadNetwork(nnf, n)){ cout << "loadNetwork fail" <<endl; return false;}
+        if(!loadSample(nnf, s)) return false;
+        if(!loadTrain(nnf, t)){ cout << "loadTrain fail" <<endl;return false;}
+
+        t.set( &n, &s);
+
         return true;
     }
 
     bool nnFileRead(const string& path, nnFile_t& nnf){
         ifstream fnn;
         fnn.open(path.c_str(), ios::in);
+        if(!fnn) return false;
         string in;
         while( getline(fnn,in) ){
             removeChar(in,'\n');
@@ -74,43 +73,81 @@ namespace nn{
     }
 
     bool loadNetwork(nnFile_t &mp, Network &n){
+        //input layer
         if( !isInt( mp["InputLayer"] )) return false;
-        n.Layer.push_back( InputLayer( atof(mp["InputLayer"].c_str()) ) );
+        n.Layer.push_back( new InputLayer( atof(mp["InputLayer"].c_str()) ) );
 
-        if(!isDouble( mp["LearningRate"] )) return false;
+        if(!isDouble( mp["LearningRate"] )) {delete static_cast<InputLayer*>(n.Layer[0]);n.Layer.clear();return false;}
         double LR = atof(mp["LearningRate"].c_str());
+        //hidden layer
         int hidden=1;
         stringstream ss;
         string s;
+        bool success = true;
         while(true){
             ss.clear();
             ss << "HiddenLayer" << hidden;
             ss >> s;
             auto sp = split( mp[s], ',');
-            if( sp.size() == 0) break; if( sp.size() != 2) return false;
-            if(!isInt(sp[0])) return false;
-            auto act = fun::find_act( sp[1] ); if(!get<2>(act)) return false;
-            n.Layer.push_back(HiddenLayer(
-                                hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes, LR,
+            if( sp.size() == 0) break; if( sp.size() != 2) success = false;
+            if(!isInt(sp[0])) success = false;
+            auto act = fun::find_act( sp[1] ); if(!get<2>(act)) success =  false;
+
+            if(success){
+                n.Layer.push_back( new HiddenLayer(
+                                hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                                 get<0>(act), get<1>(act) ) );
+            }else{
+                for(int i=n.Layer.size()-1;i>0;--i){
+                    delete static_cast<HiddenLayer*>(n.Layer[i]);
+                }
+                delete static_cast<InputLayer*>(n.Layer[0]);
+                n.Layer.clear();
+                return false;
+            }
+            ++hidden;
         }
+        //output layer
         auto sp = split( mp["OutputLayer"], ',');
-        if( sp.size() == 0) return false; if( sp.size() != 2) return false;
-        if(!isInt(sp[0])) return false;
-        auto act = fun::find_act( sp[1] ); if(!get<2>(act)) return false;
-        auto cost = fun::find_cost( mp["CostFunction"] ); if(!get<2>(cost)) return false;
-        n.Layer.push_back(OutputLayer(
-                            hidden, atoi(sp[0].c_str()), n.Layer.back().Nodes, LR,
+        if( sp.size() != 2) success = false;
+        if(!isInt(sp[0])) success = false;
+        auto act = fun::find_act( sp[1] ); if(!get<2>(act)) success = false;
+        auto cost = fun::find_cost( mp["CostFunction"] ); if(!get<2>(cost)) success = false;
+        if(!success){
+                for(int i=n.Layer.size()-1;i>0;--i){
+                    delete static_cast<HiddenLayer*>(n.Layer[i]);
+                }
+                delete static_cast<InputLayer*>(n.Layer[0]);
+                n.Layer.clear();
+                return false;
+        }
+        n.Layer.push_back( new OutputLayer(
+                            hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                             get<0>(act), get<1>(act),
                             get<0>(cost), get<1>(cost) ) );
+        for(int i=n.Layer.size()-1;i>0;--i)
+            static_cast<CalLayer*>(n.Layer[i])->RandomWeight(-2,2);
         return true;
     }
 
-    bool loadSample(nnFile_t &mp, Sample &train, Sample &test){
-        if( !train.read(mp["TrainSample"]) ) return false;
-        if( !test.read(mp["TestSample"]) ) cout << "no test data" << endl;
+    bool loadSample(nnFile_t &mp, Sample &s){
+        if(!s.read(mp["TrainSample"])) return false;
+        if(mp["SampleType"] == "Classification"){
+            Normalize(s.input,-1,1);
+            auto out = ReMapping(s.output);
+            if(!get<1>(out)) return false;
+            s.outputMap = get<0>(out);
+        }else{
+            Normalize(s.input,-1,1);
+            Normalize(s.output,0,1);
+        }
         return true;
     }
 
+    bool loadTrain(nnFile_t &mp, Trainer &t){
+        if( !isDouble( mp["Iteration"] ) ) return false;
+        t.iteration = atof( mp["Iteration"].c_str() );
+        return true;
+    }
 
 }

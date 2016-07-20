@@ -1,6 +1,8 @@
+#pragma once
 #include <armadillo>
 #include <string>
 #include <method/include/method.hpp>
+#include <iostream>
 
 using std::string;
 using arma::rowvec;
@@ -11,6 +13,7 @@ namespace nn{
     class BaseLayer{
     public:
         BaseLayer(int Layer, int Nodes);
+        void operator=(const BaseLayer &);
 
         rowvec out;
 
@@ -23,6 +26,9 @@ namespace nn{
 	public:
         CalLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact);
+        void operator=(const CalLayer &);
+        friend std::ostream& operator<<(std::ostream &, const CalLayer&);
+
 
         int Inputs;
 
@@ -39,7 +45,7 @@ namespace nn{
         void update();
 		void act();
 		void dact();
-        void randomWeight(int wmin, int wmax);
+        void RandomWeight(double wmin, double wmax);
 
         void fp(rowvec *In);
 
@@ -49,6 +55,7 @@ namespace nn{
         fun::fact_t fdact;
 
 	};
+
 
     class InputLayer : public BaseLayer{
 	public:
@@ -60,6 +67,7 @@ namespace nn{
 	public:
         HiddenLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact);
+        void operator=(const HiddenLayer&);
         void bp(rowvec *LowOut, CalLayer *UpLayer);
 
 	};
@@ -70,6 +78,7 @@ namespace nn{
                  fun::fact_t act, fun::fact_t dact,
                  fun::fcost_t cost, fun::fcost_t dcost
                     );
+        void operator=(const OutputLayer&);
         void bp(rowvec *LowOut);
 
         rowvec desire;

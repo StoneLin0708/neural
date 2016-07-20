@@ -1,5 +1,5 @@
-#include "load/include/sample.hpp"
-#include "load/include/stringProcess.hpp"
+#include "load/include/Sample.hpp"
+#include "load/include/StringProcess.hpp"
 
 #include <stdlib.h>
 #include <iostream>
@@ -24,7 +24,7 @@ typedef std::vector<data_t> data_v;
 Sample::Sample(){
 }
 
-static bool readFormat(const string& in, data_t& out, data_v &data){
+static bool readFormat(const string& in, data_t& out){
     out.input.clear();
     out.output.clear();
     vector<string> sp = split(in,':');
@@ -32,7 +32,6 @@ static bool readFormat(const string& in, data_t& out, data_v &data){
 
     if( sp.size() == 1){
         auto sInput = split(sp[0],',');
-        if( data.back().input.size() != sInput.size() ) return false;
         for(int i=0; i<(int)sInput.size(); ++i){
             if( !isDouble(sInput[i]) ) return false;
             out.input.push_back( atof( sInput[i].c_str() ) );
@@ -42,8 +41,6 @@ static bool readFormat(const string& in, data_t& out, data_v &data){
     else if( sp.size() == 2){
         auto sOutput = split(sp[0],',');
         auto sInput = split(sp[1],',');
-        if( data.back().input.size() != sInput.size() ) return false;
-        if( data.back().output.size() != sOutput.size() ) return false;
         for(int i=0; i<(int)sInput.size(); ++i){
             if( !isDouble(sInput[i]) ) return false;
             out.input.push_back( atof( sInput[i].c_str() ) );
@@ -75,10 +72,10 @@ bool Sample::read(const string path){
 
     while( sample_f >> in ){
         line++;
-        if( readFormat(in, tmp, data) )
+        if( readFormat(in, tmp) )
             data.push_back(tmp);
         else{
-            cout << "sample read fail at line " << line << " : " << in;
+            cout<< "sample read fail at line " << line << " : " << in;
 			return false;
         }
     }
@@ -90,6 +87,14 @@ bool Sample::read(const string path){
 
     input.zeros(data.size(), n_input);
     output.zeros(data.size(), n_output);
+
+    for(int i=0; i< n_sample; ++i){
+       if((int)data[i].input.size() != n_input ||
+          (int)data[i].output.size() != n_output){
+           cout<< "sample error at "<< i <<endl;
+           return false;
+       }
+    }
 
     for(int i=0; i< n_sample; ++i){
         for(int j=0; j<n_input; ++j)

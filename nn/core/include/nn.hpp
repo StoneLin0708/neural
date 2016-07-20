@@ -1,9 +1,8 @@
 #pragma once
-#include <vector>
-
 #include "core/include/Layer.hpp"
 
-
+#include <string>
+#include <vector>
 
 namespace nn{
 
@@ -12,14 +11,17 @@ namespace nn{
     class Network{
     public:
         Network();
+        ~Network();
 
-        void test(); //forward
-        void bp();
+        void fp(); //forward propagation
+        void bp(); //backward propagation
         void update();
 
         void error(int &i);
 
-        std::vector<BaseLayer> Layer;
+        bool save(std::string path);
+
+        std::vector<BaseLayer*> Layer;
 
         bool success(){return _init;}
 

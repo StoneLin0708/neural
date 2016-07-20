@@ -6,3 +6,4 @@ nntest/
 neural
 ical/
 /buildQt5_7_0_GCC64bit-Debug/
+/build*
