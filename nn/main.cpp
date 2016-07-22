@@ -2,6 +2,7 @@
 //#include "core/include/Layer.hpp"
 #include <string>
 #include <iostream>
+#include <omp.h>
 #include <opencv2/highgui/highgui.hpp>
 
 using namespace std;

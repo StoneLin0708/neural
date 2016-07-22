@@ -126,7 +126,7 @@ namespace nn{
                             get<0>(act), get<1>(act),
                             get<0>(cost), get<1>(cost) ) );
         for(int i=n.Layer.size()-1;i>0;--i)
-            static_cast<CalLayer*>(n.Layer[i])->RandomWeight(-2,2);
+            static_cast<CalLayer*>(n.Layer[i])->RandomWeight(-4,4);
         return true;
     }
 

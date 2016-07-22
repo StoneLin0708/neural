@@ -54,6 +54,7 @@ namespace nn{
           << "Delta " << endl << l.delta << endl
           << "Wupdate " << endl << l.wupdate << endl
           << "Wupdates " << endl << l.wupdates << endl
+          << "Out" << endl << l.out <<endl
           << "-------------------------------------------" <<endl;
         return o;
 
@@ -77,8 +78,6 @@ namespace nn{
         for(int i=0;i<(int)weight.n_rows;++i)
             for(int j=0;j <(int)weight.n_cols; ++j)
                 weight(i,j) = dist(mt);
-        weight *= (wmax - wmin);
-        weight += wmin;
     }
 
     InputLayer::InputLayer(int Nodes)

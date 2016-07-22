@@ -19,7 +19,7 @@ SOURCES += \
     load/src/StringProcess.cpp \
     Trainer.cpp \
     ANNModel.cpp \
-    method/src/Normailze.cpp
+    method/src/Normailze.cpp \
 
 HEADERS += \
     core/include/nn.hpp \
@@ -41,3 +41,6 @@ else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../library/armadillo
 
 INCLUDEPATH += $$PWD/../../library/armadillo-7.200.2/include
 DEPENDPATH += $$PWD/../../library/armadillo-7.200.2/include
+
+unix: CONFIG += link_pkgconfig
+unix: PKGCONFIG += opencv

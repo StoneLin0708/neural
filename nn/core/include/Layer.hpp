@@ -43,7 +43,7 @@ namespace nn{
 		mat wupdates;
 
         void update();
-		void act();
+        void act();
 		void dact();
         void RandomWeight(double wmin, double wmax);
 

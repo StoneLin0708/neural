@@ -47,7 +47,7 @@ static bool readFormat(const string& in, data_t& out){
         }
         for(int i=0; i<(int)sOutput.size(); ++i){
             if( !isDouble(sOutput[i]) ) return false;
-            out.input.push_back( atof( sOutput[i].c_str() ) );
+            out.output.push_back( atof( sOutput[i].c_str() ) );
         }
     }
     else

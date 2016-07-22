@@ -53,7 +53,7 @@ namespace nn{
 
     pair<std::vector<double>, bool> ReMapping(mat &data)
     {
-        if(data.n_cols != 1) return make_pair(vector<double>(), false);
+        //if(data.n_cols != 1) return make_pair(vector<double>(), false);
         vector<double> re;
         for(int i=0; i<(int)data.n_rows;++i){
             if( find(re.begin(),re.end(),data(i,0)) == re.end())
