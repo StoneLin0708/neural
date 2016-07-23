@@ -1,10 +1,10 @@
 TrainSample=test/s
 SampleType=Classification
-LearningRate=1
+LearningRate=2
 InputLayer=2
-HiddenLayer1=4,sigmoid
+HiddenLayer1=10,sigmoid
 #HiddenLayer2=2,sigmoid
 OutputLayer=2,sigmoid
 CostFunction=mse
-Iteration=10000
+Iteration=100000
 

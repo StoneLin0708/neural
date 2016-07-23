@@ -33,6 +33,7 @@ namespace nn{
         this->LearningRate = LearningRate;
         delta.zeros(Nodes);
         wupdate.zeros(Input+1, Nodes);
+        wupdateCounter = 0;
         wupdates.zeros(Input+1, Nodes);
 
         fact = act;
@@ -49,12 +50,12 @@ namespace nn{
 
     std::ostream& operator<<(std::ostream &o, const CalLayer &l){
         o << "CalLayer "<< l.Layer<< " : In "<< l.Inputs<< " Node "<< l.Nodes<< " LR "<< l.LearningRate <<endl
-          << "Weight " << endl << l.weight << endl
-          << "Sum " << endl << l.sum << endl
-          << "Delta " << endl << l.delta << endl
-          << "Wupdate " << endl << l.wupdate << endl
-          << "Wupdates " << endl << l.wupdates << endl
-          << "Out" << endl << l.out <<endl
+          << "Weight " << endl << l.weight
+          << "Sum " << endl << l.sum
+          << "Delta " << endl << l.delta
+          << "Wupdate " << endl << l.wupdate
+          << "Wupdates " << endl << l.wupdates
+          << "Out" << endl << l.out
           << "-------------------------------------------" <<endl;
         return o;
 
@@ -66,8 +67,9 @@ namespace nn{
     }
 
     void CalLayer::update(){
-        weight += wupdates;
+        weight += wupdates * LearningRate / wupdateCounter;
         wupdates.zeros();
+        wupdateCounter = 0;
     }
 
     void CalLayer::RandomWeight(double wmin, double wmax){
@@ -99,12 +101,13 @@ namespace nn{
 
     void HiddenLayer::bp(rowvec *LowOut, CalLayer *UpLayer){
         delta = UpLayer->delta * UpLayer->weight.head_rows(Nodes).t();
+        //cout << delta << endl;
         delta %= fdact( sum, Nodes);
         for(int i=0; i<Nodes; ++i)
             for(int j=0; j<=Inputs; ++j)
                 wupdate(j,i) = delta(i) * (*LowOut)(j);
-        wupdate *=  LearningRate;
         wupdates -= wupdate;
+        ++wupdateCounter;
     }
 
     OutputLayer::OutputLayer(int Layer, int Nodes, int Input, double LearningRate,
@@ -132,8 +135,8 @@ namespace nn{
         for(int i=0; i<Nodes; ++i)
             for(int j=0; j<=Inputs; ++j)
                 wupdate(j,i) = delta(i) * (*LowOut)(j);
-        wupdate *=  LearningRate;
         wupdates -= wupdate;
+        ++wupdateCounter;
     }
 
 

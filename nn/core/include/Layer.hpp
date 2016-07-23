@@ -14,6 +14,7 @@ namespace nn{
     public:
         BaseLayer(int Layer, int Nodes);
         void operator=(const BaseLayer &);
+        virtual ~BaseLayer(){}
 
         rowvec out;
 
@@ -28,6 +29,7 @@ namespace nn{
                  fun::fact_t act, fun::fact_t dact);
         void operator=(const CalLayer &);
         friend std::ostream& operator<<(std::ostream &, const CalLayer&);
+        virtual ~CalLayer(){}
 
 
         int Inputs;
@@ -40,6 +42,7 @@ namespace nn{
         double LearningRate;
 		rowvec delta;
 		mat wupdate;
+        int wupdateCounter;
 		mat wupdates;
 
         void update();

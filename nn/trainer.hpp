@@ -13,6 +13,7 @@ namespace  nn{
         void train();
         Network *n;
         SampleFeeder *sf;
+        bool gradientChecking();
 
         int iteration;
         double minCost;

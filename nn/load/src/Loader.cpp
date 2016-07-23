@@ -133,10 +133,12 @@ namespace nn{
     bool loadSample(nnFile_t &mp, Sample &s){
         if(!s.read(mp["TrainSample"])) return false;
         if(mp["SampleType"] == "Classification"){
-            Normalize(s.input,-1,1);
+            //Normalize(s.input,-1,1);
+            /*
             auto out = ReMapping(s.output);
             if(!get<1>(out)) return false;
             s.outputMap = get<0>(out);
+            */
         }else{
             Normalize(s.input,-1,1);
             Normalize(s.output,0,1);
