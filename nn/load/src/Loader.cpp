@@ -41,19 +41,6 @@ namespace nn{
     }Param;
 */
 
-    bool nnLoad(const string& path, Network &n, Sample &s, Trainer &t){
-        nnFile_t nnf;
-        if(!nnFileRead(path, nnf)){ cout << "nnFile fail" <<endl; return false;}
-
-        if(!loadNetwork(nnf, n)){ cout << "loadNetwork fail" <<endl; return false;}
-        if(!loadSample(nnf, s)) return false;
-        if(!loadTrain(nnf, t)){ cout << "loadTrain fail" <<endl;return false;}
-
-        t.set( &n, &s);
-
-        return true;
-    }
-
     bool nnFileRead(const string& path, nnFile_t& nnf){
         ifstream fnn;
         fnn.open(path.c_str(), ios::in);
@@ -130,15 +117,18 @@ namespace nn{
         return true;
     }
 
-    bool loadSample(nnFile_t &mp, Sample &s){
-        if(!s.read(mp["TrainSample"])) return false;
+    bool loadSample(nnFile_t &mp, Sample &s, string type){
+        if(!s.read(mp[type])) return false;
         if(mp["SampleType"] == "Classification"){
-            //Normalize(s.input,-1,1);
-            /*
+            //cout << "s i:"<<endl<<s.input << endl;
+            //cout << "s o:"<<endl<<s.output << endl;
+            s.norm_in = Normalize(s.input,-1,1);
             auto out = ReMapping(s.output);
             if(!get<1>(out)) return false;
             s.outputMap = get<0>(out);
-            */
+            s.n_output = s.output.n_cols;
+            //cout << "s i n:"<<endl<<s.input << endl;
+            //cout << "s o n:"<<endl<<s.output << endl;
         }else{
             Normalize(s.input,-1,1);
             Normalize(s.output,0,1);

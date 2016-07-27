@@ -8,7 +8,6 @@ CONFIG -= qt
 
 SOURCES += \
     core/src/nn.cpp \
-    method/src/method.cpp \
     output/src/info.cpp \
     output/src/plot.cpp \
     main.cpp \
@@ -20,19 +19,25 @@ SOURCES += \
     Trainer.cpp \
     ANNModel.cpp \
     method/src/Normailze.cpp \
+    method/src/Method.cpp \
+    core/src/AnfisLayer.cpp \
+    Tester.cpp
 
 HEADERS += \
     core/include/nn.hpp \
-    method/include/method.hpp \
     output/include/plot.hpp \
     core/include/Layer.hpp \
     load/include/Loader.hpp \
-    trainer.hpp \
     load/include/SampleFeeder.hpp \
     load/include/Sample.hpp \
     load/include/StringProcess.hpp \
     ANNModel.hpp \
-    method/include/Normailze.hpp
+    method/include/Normailze.hpp \
+    method/include/Method.hpp \
+    Trainer.hpp \
+    core/src/AnfisLayer.hpp \
+    Tester.hpp \
+    Timer.hpp
 
 DISTFILES +=
 

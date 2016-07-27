@@ -1,7 +1,9 @@
 #pragma once
 #include "core/include/nn.hpp"
 #include "load/include/Sample.hpp"
-#include "trainer.hpp"
+#include "Trainer.hpp"
+#include "Tester.hpp"
+
 #include <string>
 
 namespace  nn{
@@ -15,7 +17,9 @@ public:
 
     Network network;
     Sample trainSample;
+    Sample testSample;
     Trainer trainer;
+    Tester tester;
 
 };
 

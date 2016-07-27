@@ -1,5 +1,5 @@
 #include <math.h>
-#include "method/include/method.hpp"
+#include "method/include/Method.hpp"
 
 #include <iostream>
 #include <cstdlib>

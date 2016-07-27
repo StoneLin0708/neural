@@ -1,3 +1,40 @@
+#include "output/include/plot.hpp"
+#include <opencv2/highgui/highgui.hpp>
+
+using namespace cv;
+using namespace nn;
+
+bool drawResult2D(nn::ANNModel &nnm, bool show){
+
+    cv::Mat m(500,500,CV_8UC3,Scalar(255,255,255));
+
+    arma::rowvec in(2);
+    for(int y=0;y<500; ++y){
+        for(int x=0;x<500; ++x){
+            in(0) = x/500.0;
+            in(1) = y/500.0;
+            nn::Normalize(in, nnm.trainSample.norm_in);
+            NN_GET_INPUT_LAYER( nnm.network )->out.subvec(0,1) = in;
+            nnm.network.fp();
+            if(	NN_GET_OUTPUT(nnm.network)(0) >
+                NN_GET_OUTPUT(nnm.network)(1)){
+                m.at<Vec3b>(y,x) = Vec3b(255,0,0);
+            }
+            else
+                m.at<Vec3b>(y,x) = Vec3b(0,255,0);
+        }
+    }
+
+    if(show){
+        imshow("m",m);
+        waitKey(0);
+    }
+
+
+    return true;
+}
+
+
 /*
 #include <mgl2/mgl.h>
 #include <math.h>

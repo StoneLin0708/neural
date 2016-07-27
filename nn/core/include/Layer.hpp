@@ -1,7 +1,7 @@
 #pragma once
 #include <armadillo>
 #include <string>
-#include <method/include/method.hpp>
+#include <method/include/Method.hpp>
 #include <iostream>
 
 using std::string;
@@ -31,6 +31,7 @@ namespace nn{
         friend std::ostream& operator<<(std::ostream &, const CalLayer&);
         virtual ~CalLayer(){}
 
+        void RandomWeight(double wmin, double wmax);
 
         int Inputs;
 
@@ -42,15 +43,15 @@ namespace nn{
         double LearningRate;
 		rowvec delta;
 		mat wupdate;
-        int wupdateCounter;
 		mat wupdates;
 
-        void update();
-        void act();
-		void dact();
-        void RandomWeight(double wmin, double wmax);
-
+        virtual void clear();
         void fp(rowvec *In);
+        virtual void bp(BaseLayer *LowLayer);
+        virtual void update();
+
+        int fpCounter;
+        int bpCounter;
 
 	protected:
 
@@ -71,7 +72,10 @@ namespace nn{
         HiddenLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact);
         void operator=(const HiddenLayer&);
-        void bp(rowvec *LowOut, CalLayer *UpLayer);
+
+        void clear();
+        void bp(BaseLayer *LowLayer);
+        void update();
 
 	};
 
@@ -82,7 +86,12 @@ namespace nn{
                  fun::fcost_t cost, fun::fcost_t dcost
                     );
         void operator=(const OutputLayer&);
-        void bp(rowvec *LowOut);
+
+        void clear();
+        void bp(BaseLayer *LowLayer);
+        void update();
+
+        void CalCost();
 
         rowvec desire;
 
@@ -90,6 +99,7 @@ namespace nn{
         fun::fcost_t fdcost;
 
 		rowvec cost;
+        rowvec costs;
 
 
 	};

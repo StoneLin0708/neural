@@ -4,31 +4,28 @@
 #include <string>
 #include <vector>
 
-namespace nn{
+#define NN_GET_INPUT_LAYER( N ) static_cast<nn::InputLayer*>( (N).Layer[0] )
+#define NN_GET_HIEEDN_LAYER( N , L  ) static_cast<nn::HiddenLayer*>( (N).Layer[L-1] )
+#define NN_GET_HIEEDN_SIZE( N ) ( (int)(N).Layer.size()-2 )
+#define NN_GET_OUTPUT_LAYER( N ) static_cast<nn::OutputLayer*>( (N).Layer.back() )
 
-    bool gradientChecking(int sample = -1);
+#define NN_GET_OUTPUT( N ) (NN_GET_OUTPUT_LAYER( N )->out)
+
+namespace nn{
 
     class Network{
     public:
         Network();
         ~Network();
 
-        void fp(); //forward propagation
-        void bp(); //backward propagation
-        void update();
+        virtual void clear();
+        virtual void fp(); //forward propagation
+        virtual void bp(); //backward propagation
+        virtual void update();
 
-        void error(int &i);
-
-        bool save(std::string path);
+        //virtual bool save(std::string path);
 
         std::vector<BaseLayer*> Layer;
-
-        bool success(){return _init;}
-
-    private:
-        bool _init;
-
-        int iteration;
 
     };
 

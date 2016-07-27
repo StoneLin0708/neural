@@ -43,6 +43,22 @@ namespace nn{
 		return param;
     }
 
+    void Normalize(mat &data, const NormParam &param){
+        for(int i=0; i<(int)data.n_cols;++i){
+            data.col(i) -= param.average(i);
+            data.col(i) *= param.scale(i);
+            data.col(i) += param.offset;
+        }
+    }
+
+    void Normalize(rowvec &data, const NormParam &param){
+        for(int i=0; i<(int)data.n_cols;++i){
+            data.col(i) -= param.average(i);
+            data.col(i) *= param.scale(i);
+            data.col(i) += param.offset;
+        }
+    }
+
     void InvNormalize(mat &data, const NormParam &param){
         for(int i=0; i<(int)data.n_cols;++i){
             data.col(i) -= param.offset;
@@ -50,6 +66,15 @@ namespace nn{
             data.col(i) += param.average(i);
         }
     }
+
+    void InvNormalize(rowvec &data, const NormParam &param){
+        for(int i=0; i<(int)data.n_cols;++i){
+            data.col(i) -= param.offset;
+            data.col(i) /= param.scale(i);
+            data.col(i) += param.average(i);
+        }
+    }
+
 
     pair<std::vector<double>, bool> ReMapping(mat &data)
     {
@@ -59,12 +84,13 @@ namespace nn{
             if( find(re.begin(),re.end(),data(i,0)) == re.end())
                 re.push_back(data(i,0));
         }
-        mat m(data.n_rows, m.size());
+        mat m(data.n_rows, re.size());
         m.zeros();
         for(int i=0; i<(int)data.n_rows;++i)
-            for(int j=0; j<(int)m.size();++j)
+            for(int j=0; j<(int)re.size();++j)
                 if(re[j]==data(i,0))
                     m(i,j) = 1;
+        data = m;
         return make_pair(re,true);
     }
 

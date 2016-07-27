@@ -1,8 +1,9 @@
 TrainSample=test/s
+TestSample=test/s
 SampleType=Classification
 LearningRate=2
 InputLayer=2
-HiddenLayer1=10,sigmoid
+HiddenLayer1=4,sigmoid
 #HiddenLayer2=2,sigmoid
 OutputLayer=2,sigmoid
 CostFunction=mse
