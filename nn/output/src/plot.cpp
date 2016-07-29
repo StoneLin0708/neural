@@ -1,9 +1,19 @@
 #include "output/include/plot.hpp"
+
+
+#ifdef _WIN32
+
+bool drawResult2D(nn::ANNModel &nnm, bool show){
+
+    return false;
+}
+
+#else
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
-using namespace cv;
 using namespace std;
+using namespace cv;
 using namespace nn;
 
 bool drawResult2D(nn::ANNModel &nnm, bool show){
@@ -32,11 +42,9 @@ bool drawResult2D(nn::ANNModel &nnm, bool show){
         waitKey(0);
     }
 
-
     return true;
 }
-
-
+#endif
 /*
 #include <mgl2/mgl.h>
 #include <math.h>

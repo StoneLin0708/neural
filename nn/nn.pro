@@ -10,7 +10,7 @@ QMAKE_CXXFLAGS_RELEASE -= -O
 QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
 
-QMAKE_CXXFLAGS_RELEASE *= -O3
+QMAKE_CXXFLAGS_RELEASE += -O3
 
 SOURCES += \
     core/src/nn.cpp \
@@ -49,11 +49,10 @@ HEADERS += \
 
 DISTFILES +=
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../library/armadillo-7.200.2/lib/ -llibarmadillo.dll
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../library/armadillo-7.200.2/lib/ -llibarmadillo.dll
+#win32: LIBS += -L$$PWD/../../library/armadillo-7.200.2/lib/ -llibarmadillo.dll
 
-INCLUDEPATH += $$PWD/../../library/armadillo-7.200.2/include
-DEPENDPATH += $$PWD/../../library/armadillo-7.200.2/include
+win32:INCLUDEPATH += $$PWD/../../library/armadillo-7.200.2/include
+win32:DEPENDPATH += $$PWD/../../library/armadillo-7.200.2/include
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += opencv
