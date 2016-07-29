@@ -1,6 +1,7 @@
 #include "Trainer.hpp"
 #include "core/include/Layer.hpp"
 #include <iostream>
+#include <iomanip>
 #include "Timer.hpp"
 
 using namespace std;
@@ -12,14 +13,15 @@ Trainer::Trainer(){
 }
 
 Trainer::~Trainer(){
-   if(sf != nullptr) delete sf;
+    if(sf != nullptr) delete sf;
 }
 
 void Trainer::train()
 {
-    Timer timer;
+    Timer timer, timerPredict;
     bool calCost = false;
     timer.start();
+    timerPredict.start();
     sf->reset();
     for(int i=iteration-1; i>=0; --i){
         n->clear();
@@ -44,17 +46,22 @@ void Trainer::train()
         cin.get();
         */
         if(calCost){
-            cout << "cost :"<<
-                    mean(NN_GET_OUTPUT_LAYER(*n)->costs/NN_GET_OUTPUT_LAYER(*n)->fpCounter)<<endl;
+            cout<< "\rcost :" << setw(12) << fixed<< setprecision(10)
+                << mean(NN_GET_OUTPUT_LAYER(*n)->costs/NN_GET_OUTPUT_LAYER(*n)->fpCounter)
+                << " time left : " << setw(8)<<fixed<< setprecision(1)
+                << (timerPredict.countMS() / 1000) * i / (iteration - i) <<" sec ";
+            cout.flush();
+
             timer.start();
             calCost = false;
         }
 
-        if(timer.countMS() > 200) calCost = true;
+        if(timer.countMS() > 500) calCost = true;
 
         n->update();
         sf->reset();
     }
+    cout << endl;
 }
 
 void Trainer::set(Network *n, Sample *s){

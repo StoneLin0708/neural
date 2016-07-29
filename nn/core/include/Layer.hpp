@@ -14,7 +14,7 @@ namespace nn{
     public:
         BaseLayer(int Layer, int Nodes);
         void operator=(const BaseLayer &);
-        virtual ~BaseLayer(){}
+        virtual ~BaseLayer(){};
 
         rowvec out;
 
@@ -29,9 +29,10 @@ namespace nn{
                  fun::fact_t act, fun::fact_t dact);
         void operator=(const CalLayer &);
         friend std::ostream& operator<<(std::ostream &, const CalLayer&);
+
         virtual ~CalLayer(){}
 
-        void RandomWeight(double wmin, double wmax);
+        virtual void RandomInit(double wmin, double wmax);
 
         int Inputs;
 
@@ -46,7 +47,7 @@ namespace nn{
 		mat wupdates;
 
         virtual void clear();
-        void fp(rowvec *In);
+        virtual void fp(rowvec *In);
         virtual void bp(BaseLayer *LowLayer);
         virtual void update();
 

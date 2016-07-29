@@ -110,9 +110,9 @@ bool readFor(const string &text, const string &in, string& out){
 
 void errorString(const string &msg, const string &error,
 		const string &right){
-	cout<< msg << " : " << error;
+    cout<< msg << error;
 	if(right.size() != 0)
-		cout<< " : "<< right;
+        cout<< right;
 	cout<<endl;
 }
 

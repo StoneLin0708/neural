@@ -8,4 +8,3 @@ HiddenLayer1=4,sigmoid
 OutputLayer=2,sigmoid
 CostFunction=mse
 Iteration=100000
-

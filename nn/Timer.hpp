@@ -8,7 +8,7 @@
             timer.start();\
             fun\
             auto t = timer.countMS();\
-            std::cout << text <<  t << "ms" << std::endl;\
+            std::cout << text <<  t << " ms" << std::endl;\
         }while(false);\
     }
 

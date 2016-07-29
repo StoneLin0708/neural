@@ -1,7 +1,9 @@
 #include "output/include/plot.hpp"
 #include <opencv2/highgui/highgui.hpp>
+#include <iostream>
 
 using namespace cv;
+using namespace std;
 using namespace nn;
 
 bool drawResult2D(nn::ANNModel &nnm, bool show){
@@ -11,9 +13,9 @@ bool drawResult2D(nn::ANNModel &nnm, bool show){
     arma::rowvec in(2);
     for(int y=0;y<500; ++y){
         for(int x=0;x<500; ++x){
-            in(0) = x/500.0;
-            in(1) = y/500.0;
-            nn::Normalize(in, nnm.trainSample.norm_in);
+            in(0) = x*2/500.0-1;
+            in(1) = y*2/500.0-1;
+            //nn::Normalize(in, nnm.trainSample.norm_in);
             NN_GET_INPUT_LAYER( nnm.network )->out.subvec(0,1) = in;
             nnm.network.fp();
             if(	NN_GET_OUTPUT(nnm.network)(0) >

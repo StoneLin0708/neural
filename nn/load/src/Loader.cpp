@@ -16,7 +16,6 @@ namespace nn{
 
 /* Param
     typedef struct Param{
-        nn_t::output_t sampleType;
         double stopTrainingCost;
 
         string normalizeMethod;
@@ -27,17 +26,6 @@ namespace nn{
         string weightName;
         int featureOffset;
 
-        sampleSet::type trainType;
-        int trainStart;
-        int trainEnd;
-        int trainNumber;
-
-        sampleSet::type testType;
-        int testStart;
-        int testEnd;
-        int testNumber;
-
-        int testStep;
     }Param;
 */
 
@@ -64,7 +52,7 @@ namespace nn{
         if( !isInt( mp["InputLayer"] )) return false;
         n.Layer.push_back( new InputLayer( atof(mp["InputLayer"].c_str()) ) );
 
-        if(!isDouble( mp["LearningRate"] )) {delete static_cast<InputLayer*>(n.Layer[0]);n.Layer.clear();return false;}
+        if(!isDouble( mp["LearningRate"] )) return false;
         double LR = atof(mp["LearningRate"].c_str());
         //hidden layer
         int hidden=1;
@@ -85,11 +73,6 @@ namespace nn{
                                 hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                                 get<0>(act), get<1>(act) ) );
             }else{
-                for(int i=n.Layer.size()-1;i>0;--i){
-                    delete static_cast<HiddenLayer*>(n.Layer[i]);
-                }
-                delete static_cast<InputLayer*>(n.Layer[0]);
-                n.Layer.clear();
                 return false;
             }
             ++hidden;
@@ -100,26 +83,20 @@ namespace nn{
         if(!isInt(sp[0])) success = false;
         auto act = fun::find_act( sp[1] ); if(!get<2>(act)) success = false;
         auto cost = fun::find_cost( mp["CostFunction"] ); if(!get<2>(cost)) success = false;
-        if(!success){
-                for(int i=n.Layer.size()-1;i>0;--i){
-                    delete static_cast<HiddenLayer*>(n.Layer[i]);
-                }
-                delete static_cast<InputLayer*>(n.Layer[0]);
-                n.Layer.clear();
-                return false;
-        }
+        if(!success) return false;
         n.Layer.push_back( new OutputLayer(
                             hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                             get<0>(act), get<1>(act),
                             get<0>(cost), get<1>(cost) ) );
         for(int i=n.Layer.size()-1;i>0;--i)
-            static_cast<CalLayer*>(n.Layer[i])->RandomWeight(-4,4);
+            static_cast<CalLayer*>(n.Layer[i])->RandomInit(-2,2);
         return true;
     }
 
     bool loadSample(nnFile_t &mp, Sample &s, string type){
         if(!s.read(mp[type])) return false;
-        if(mp["SampleType"] == "Classification"){
+        auto ty = mp["SampleType"];
+        if(ty == "Classification"){
             //cout << "s i:"<<endl<<s.input << endl;
             //cout << "s o:"<<endl<<s.output << endl;
             s.norm_in = Normalize(s.input,-1,1);
@@ -129,10 +106,15 @@ namespace nn{
             s.n_output = s.output.n_cols;
             //cout << "s i n:"<<endl<<s.input << endl;
             //cout << "s o n:"<<endl<<s.output << endl;
+        }else if(ty == "ANFIS"){
         }else{
             Normalize(s.input,-1,1);
             Normalize(s.output,0,1);
         }
+        cout<< type
+            << " loaded i :" <<  s.n_input
+            << " o :" <<  s.n_output
+            << " s :" <<  s.n_sample<<endl;
         return true;
     }
 

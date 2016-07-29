@@ -67,7 +67,7 @@ std::ostream& operator<<(std::ostream &o, const CalLayer &l){
 }
 
 void CalLayer::clear(){
-    //shout not cross this
+    //should not cross this
     abort();
 }
 
@@ -78,16 +78,16 @@ void CalLayer::fp(rowvec *In){
 }
 
 void CalLayer::bp(BaseLayer *){
-    //shout not cross this
+    //should not cross this
     abort();
 }
 
 void CalLayer::update(){
-    //shout not cross this
+    //should not cross this
     abort();
 }
 
-void CalLayer::RandomWeight(double wmin, double wmax){
+void CalLayer::RandomInit(double wmin, double wmax){
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(wmin, wmax);
@@ -181,21 +181,5 @@ void OutputLayer::CalCost(){
     cost = fcost(desire, out, Nodes);
     costs += cost;
 }
-
-/*CalLayer::CalLayer(CalLayer &&l)
-    CalLayer::CalLayer(CalLayer &&l){
-        Input = l.Input;
-
-        weight = l.weight;
-        sum = l.sum;
-
-        delta = l.delta;
-        wupdate = l.wupdate;
-        wupdates = l.wupdates;
-
-        fact = l.fact;
-        fdact = l.fdact;
-    }
-*/
 
 }

@@ -6,9 +6,14 @@ CONFIG += c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
+
+QMAKE_CXXFLAGS_RELEASE *= -O3
+
 SOURCES += \
     core/src/nn.cpp \
-    output/src/info.cpp \
     output/src/plot.cpp \
     main.cpp \
     core/src/Layer.cpp \
@@ -21,7 +26,9 @@ SOURCES += \
     method/src/Normailze.cpp \
     method/src/Method.cpp \
     core/src/AnfisLayer.cpp \
-    Tester.cpp
+    Tester.cpp \
+    output/src/Info.cpp \
+    anfis_1.cpp
 
 HEADERS += \
     core/include/nn.hpp \
@@ -35,9 +42,10 @@ HEADERS += \
     method/include/Normailze.hpp \
     method/include/Method.hpp \
     Trainer.hpp \
-    core/src/AnfisLayer.hpp \
     Tester.hpp \
-    Timer.hpp
+    Timer.hpp \
+    core/include/AnfisLayer.hpp \
+    output/include/Info.hpp
 
 DISTFILES +=
 

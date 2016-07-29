@@ -3,12 +3,7 @@
 #include "load/include/Loader.hpp"
 #include "load/include/SampleFeeder.hpp"
 
-#include <unistd.h>
-#include <time.h>
 #include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <algorithm>
 #include <cassert>
 
 using namespace std;
@@ -23,10 +18,10 @@ Network::~Network()
 {
     assert(Layer.size()>2 || Layer.size() == 0 );
     if(Layer.size() != 0){
-        delete NN_GET_INPUT_LAYER(*this);
-        for(int i=0; i<NN_GET_HIEEDN_SIZE(*this);++i)
-            delete NN_GET_HIEEDN_LAYER(*this, i);
-        delete NN_GET_OUTPUT_LAYER(*this);
+        while(Layer.size() != 0){
+            delete Layer.back();
+            Layer.pop_back();
+        }
     }
 }
 

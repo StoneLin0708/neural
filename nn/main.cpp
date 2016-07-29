@@ -6,7 +6,6 @@
 #include "Timer.hpp"
 
 using namespace std;
-using namespace nn;
 
 int main(int argc, char* argv[]){
 
@@ -25,9 +24,9 @@ int main(int argc, char* argv[]){
 
     TIMER_MEASURE_MACRO( nnm.trainer.train(); , "Train : ");
 
-    TIMER_MEASURE_MACRO( nnm.tester.test(); , "Test : ");
+    TIMER_MEASURE_MACRO( nnm.tester.test(nn::Tester::classification); , "Test : ");
 
-    drawResult2D(nnm);
+    //drawResult2D(nnm);
 
     return 0;
 }

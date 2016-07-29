@@ -1,5 +1,7 @@
 #include "ANNModel.hpp"
 #include "load/include/Loader.hpp"
+#include "output/include/Info.hpp"
+
 #include <iostream>
 using namespace std;
 namespace  nn{
@@ -21,6 +23,7 @@ bool ANNModel::load(string &nnFilePath)
 
     trainer.set( &network, &trainSample);
     tester.set( &network, &testSample);
+    showNetwork( network );
 
     return true;
 }

@@ -13,13 +13,19 @@ class ANNModel
 public:
     ANNModel();
 
-    bool load(std::string &nnFilePath);
+    virtual bool load(std::string &nnFilePath);
 
     Network network;
     Sample trainSample;
     Sample testSample;
     Trainer trainer;
     Tester tester;
+
+};
+
+class ANFISModel : public ANNModel{
+public:
+    bool load(std::string &nnFilePath);
 
 };
 
