@@ -1,4 +1,4 @@
-#include "core/include/nn.hpp"
+#include "core/include/network.hpp"
 #include "method/include/Method.hpp"
 #include "load/include/Loader.hpp"
 #include "load/include/SampleFeeder.hpp"

@@ -2,6 +2,8 @@
 #include "load/include/Loader.hpp"
 #include "method/include/Normailze.hpp"
 #include "load/include/SampleFeeder.hpp"
+#include "layer/include/feedforward.hpp"
+
 #include <armadillo>
 #include <iostream>
 #include <fstream>
@@ -50,7 +52,7 @@ namespace nn{
     bool loadNetwork(nnFile_t &mp, Network &n){
         //input layer
         if( !isInt( mp["InputLayer"] )) return false;
-        n.Layer.push_back( new InputLayer( atof(mp["InputLayer"].c_str()) ) );
+        n.Layer.push_back( new feedforward::InputLayer( atof(mp["InputLayer"].c_str()) ) );
 
         if(!isDouble( mp["LearningRate"] )) return false;
         double LR = atof(mp["LearningRate"].c_str());
@@ -69,7 +71,7 @@ namespace nn{
             auto act = fun::find_act( sp[1] ); if(!get<2>(act)) success =  false;
 
             if(success){
-                n.Layer.push_back( new HiddenLayer(
+                n.Layer.push_back( new feedforward::HiddenLayer(
                                 hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                                 get<0>(act), get<1>(act) ) );
             }else{
@@ -84,7 +86,7 @@ namespace nn{
         auto act = fun::find_act( sp[1] ); if(!get<2>(act)) success = false;
         auto cost = fun::find_cost( mp["CostFunction"] ); if(!get<2>(cost)) success = false;
         if(!success) return false;
-        n.Layer.push_back( new OutputLayer(
+        n.Layer.push_back( new feedforward::OutputLayer(
                             hidden, atoi(sp[0].c_str()), n.Layer.back()->Nodes, LR,
                             get<0>(act), get<1>(act),
                             get<0>(cost), get<1>(cost) ) );

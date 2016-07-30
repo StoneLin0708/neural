@@ -13,7 +13,6 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE += -O3
 
 SOURCES += \
-    core/src/nn.cpp \
     output/src/plot.cpp \
     main.cpp \
     core/src/Layer.cpp \
@@ -25,13 +24,14 @@ SOURCES += \
     ANNModel.cpp \
     method/src/Normailze.cpp \
     method/src/Method.cpp \
-    core/src/AnfisLayer.cpp \
     Tester.cpp \
     output/src/Info.cpp \
-    anfis_1.cpp
+    anfis_1.cpp \
+    layer/src/anfis.cpp \
+    layer/src/feedforward.cpp \
+    core/src/network.cpp
 
 HEADERS += \
-    core/include/nn.hpp \
     output/include/plot.hpp \
     core/include/Layer.hpp \
     load/include/Loader.hpp \
@@ -44,8 +44,10 @@ HEADERS += \
     Trainer.hpp \
     Tester.hpp \
     Timer.hpp \
-    core/include/AnfisLayer.hpp \
-    output/include/Info.hpp
+    output/include/Info.hpp \
+    layer/include/anfis.hpp \
+    layer/include/feedforward.hpp \
+    core/include/network.hpp
 
 DISTFILES +=
 

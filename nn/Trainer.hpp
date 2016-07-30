@@ -1,5 +1,5 @@
 #pragma once
-#include <core/include/nn.hpp>
+#include <core/include/network.hpp>
 #include <load/include/SampleFeeder.hpp>
 
 namespace  nn{
