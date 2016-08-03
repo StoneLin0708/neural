@@ -72,6 +72,8 @@ bool Sample::read(const string path){
 
     while( sample_f >> in ){
         line++;
+        replaceChar(in, '\t', ' ');
+        removeChar(in, ' ');
         if( readFormat(in, tmp) )
             data.push_back(tmp);
         else{

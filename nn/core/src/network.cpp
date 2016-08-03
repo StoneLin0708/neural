@@ -12,17 +12,40 @@ using namespace arma;
 namespace nn{
 
 Network::Network(){
+    ivec = nullptr;
+    ovec = nullptr;
+    dvec = nullptr;
 }
 
 Network::~Network()
 {
     assert(Layer.size()>2 || Layer.size() == 0 );
+    delete ivec;
+    delete ovec;
+    delete dvec;
     if(Layer.size() != 0){
         while(Layer.size() != 0){
             delete Layer.back();
             Layer.pop_back();
         }
     }
+}
+
+void Network::addInputLayer(BaseLayer *l)
+{
+    Layer.push_back(l);
+    ivec = new rowvec(l->out.memptr(),l->Nodes,false,true);
+}
+
+void Network::addMiddleLayer(BaseLayer *l){
+    Layer.push_back(l);
+}
+
+void Network::addOutputLayer(BaseLayer *l, BaseOutputLayer *o){
+   Layer.push_back(l);
+   OutLayer = o;
+   ovec = new rowvec(l->out.memptr(),l->Nodes,false,true);
+   dvec = new rowvec(o->desire.memptr(),l->Nodes,false,true);
 }
 
 void Network::clear(){
@@ -48,5 +71,6 @@ void Network::update(){
         static_cast<CalLayer*>(Layer[i])->update();
     }
 }
+
 
 }

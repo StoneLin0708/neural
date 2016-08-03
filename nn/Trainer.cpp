@@ -28,7 +28,7 @@ void Trainer::train()
         while(!sf->isLast()){
             sf->next();
             n->fp();
-            if(calCost) NN_GET_OUTPUT_LAYER(*n)->CalCost();
+            if(calCost) n->OutLayer->CalCost();
             n->bp();
             /*
             cout << "o" <<endl << n->Layer[0]->out<<endl;
@@ -38,6 +38,7 @@ void Trainer::train()
             cout << "-------" <<endl;
             cin.get();
             */
+            //cin.get();
         }
         /*
         cout << *static_cast<CalLayer*>(n->Layer[1]);
@@ -47,7 +48,7 @@ void Trainer::train()
         */
         if(calCost){
             cout<< "\rcost :" << setw(12) << fixed<< setprecision(10)
-                << mean(NN_GET_OUTPUT_LAYER(*n)->costs/NN_GET_OUTPUT_LAYER(*n)->fpCounter)
+                << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)
                 << " time left : " << setw(8)<<fixed<< setprecision(1)
                 << (timerPredict.countMS() / 1000) * i / (iteration - i) <<" sec ";
             cout.flush();
@@ -56,7 +57,7 @@ void Trainer::train()
             calCost = false;
         }
 
-        if(timer.countMS() > 500) calCost = true;
+        if(timer.countMS() > 10) calCost = true;
 
         n->update();
         sf->reset();
@@ -66,7 +67,7 @@ void Trainer::train()
 
 void Trainer::set(Network *n, Sample *s){
     this->n = n;
-    sf = new SampleFeeder(s, &n->Layer[0]->out, &(NN_GET_OUTPUT_LAYER(*n)->desire));
+    sf = new SampleFeeder(s, &(n->input()), &(n->desire())   );
 }
 
 }

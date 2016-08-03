@@ -1,5 +1,5 @@
 #include "Tester.hpp"
-
+#include "layer/include/feedforward.hpp"
 #include "core/include/Layer.hpp"
 #include <iostream>
 #include <iomanip>
@@ -19,7 +19,7 @@ Tester::~Tester(){
 void Tester::set(Network *n, Sample *s){
     this->n = n;
     this->s = s;
-    sf = new SampleFeeder(s, &n->Layer[0]->out, &(NN_GET_OUTPUT_LAYER(*n)->desire));
+    sf = new SampleFeeder(s, &n->input(), &n->desire());
 }
 
 void Tester::testClassification(){
@@ -29,15 +29,14 @@ void Tester::testClassification(){
     while(!sf->isLast()){
         sf->next();
         n->fp();
-        NN_GET_OUTPUT_LAYER(*n)->CalCost();
-        if(NN_GET_OUTPUT_LAYER(*n)->out.index_max()==
-                NN_GET_OUTPUT_LAYER(*n)->desire.index_max())
+        n->OutLayer->CalCost();
+        if(n->output().index_max()== n->desire().index_max())
             ++right;
     }
     cout<< "Test Cost : "
-        << mean(NN_GET_OUTPUT_LAYER(*n)->costs/NN_GET_OUTPUT_LAYER(*n)->fpCounter)<<endl
+        << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)<<endl
         << "Classification Accurate : " << fixed << setprecision(2)
-        << 100 * (double)right / NN_GET_OUTPUT_LAYER(*n)->fpCounter <<endl;
+        << 100 * (double)right / static_cast<CalLayer*>(n->Layer.back())->fpCounter <<endl;
 }
 
 
@@ -50,10 +49,10 @@ void Tester::test(TestType type)
         while(!sf->isLast()){
             sf->next();
             n->fp();
-            NN_GET_OUTPUT_LAYER(*n)->CalCost();
+            n->OutLayer->CalCost();
         }
         cout<< "cost :"
-            << mean(NN_GET_OUTPUT_LAYER(*n)->costs/NN_GET_OUTPUT_LAYER(*n)->fpCounter)<<endl;
+            << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)<<endl;
         break;
     case classification:
         testClassification();
@@ -77,11 +76,10 @@ bool Tester::gradientChecking(bool info){
     double delta = 1.0e-4;
     double errorMax = 1.0e-6;
     double fw,fwd;
-    auto lout = NN_GET_OUTPUT_LAYER(*n);
 
     for(int l=n->Layer.size()-1; l>0; --l){
         if(info) cout << "Gradient Checking Layer : " << l << endl;
-        auto layer = static_cast<CalLayer*>(n->Layer[l]);
+        auto layer = static_cast<feedforward::FeedForwardCalLayer*>(n->Layer[l]);
         sf->reset();
         n->clear();
         while(!sf->isLast()){
@@ -100,8 +98,8 @@ bool Tester::gradientChecking(bool info){
                 while(!sf->isLast()){
                     sf->next();
                     n->fp();
-                    auto c = lout->fcost(lout->desire,lout->out,lout->Nodes);
-                    for(int k=0;k<lout->Nodes;++k)
+                    auto c = n->OutLayer->fcost(n->desire(),n->output(),n->Layer.back()->Nodes);
+                    for(int k=0;k<n->Layer.back()->Nodes;++k)
                         fwd += c(k);
                 }
 
@@ -110,8 +108,8 @@ bool Tester::gradientChecking(bool info){
                 while(!sf->isLast()){
                     sf->next();
                     n->fp();
-                    auto c = lout->fcost(lout->desire,lout->out,lout->Nodes);
-                    for(int k=0;k<lout->Nodes;++k)
+                    auto c = n->OutLayer->fcost(n->desire(),n->output(),n->Layer.back()->Nodes);
+                    for(int k=0;k<n->Layer.back()->Nodes;++k)
                         fwd -= c(k);
                 }
                 layer->weight(i,j) += delta;

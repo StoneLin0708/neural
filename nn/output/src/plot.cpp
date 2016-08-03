@@ -9,6 +9,7 @@ bool drawResult2D(nn::ANNModel &nnm, bool show){
 }
 
 #else
+#include "layer/include/feedforward.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
@@ -26,10 +27,10 @@ bool drawResult2D(nn::ANNModel &nnm, bool show){
             in(0) = x*2/500.0-1;
             in(1) = y*2/500.0-1;
             //nn::Normalize(in, nnm.trainSample.norm_in);
-            NN_GET_INPUT_LAYER( nnm.network )->out.subvec(0,1) = in;
+            nnm.network.input() = in;
             nnm.network.fp();
-            if(	NN_GET_OUTPUT(nnm.network)(0) >
-                NN_GET_OUTPUT(nnm.network)(1)){
+            if(	nnm.network.output()(0) >
+                nnm.network.output()(1) ){
                 m.at<Vec3b>(y,x) = Vec3b(255,0,0);
             }
             else

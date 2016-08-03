@@ -1,5 +1,7 @@
 #include "core/include/Layer.hpp"
 #include "method/include/Method.hpp"
+#include <armadillo>
+using arma::mat;
 
 namespace nn {
 namespace feedforward {
@@ -9,6 +11,7 @@ namespace feedforward {
         FeedForwardCalLayer(int Layer, int Nodes, int Input, double LearningRate,
                          fun::fact_t act, fun::fact_t dact);
         virtual ~FeedForwardCalLayer(){}
+        void RandomInit(double wmin, double wmax);
         //forward
         mat weight;
         rowvec sum;
@@ -46,7 +49,7 @@ namespace feedforward {
 
     };
 
-    class OutputLayer : public FeedForwardCalLayer{
+    class OutputLayer : public FeedForwardCalLayer , public BaseOutputLayer{
     public:
         OutputLayer(int Layer, int Nodes, int Input, double LearningRate,
                  fun::fact_t act, fun::fact_t dact,
@@ -54,19 +57,11 @@ namespace feedforward {
                     );
         //void operator=(const OutputLayer&);
 
+        void CalCost();
         void clear();
         void bp(BaseLayer *LowLayer);
         void update();
 
-        void CalCost();
-
-        rowvec desire;
-
-        fun::fcost_t fcost;
-        fun::fcost_t fdcost;
-
-        rowvec cost;
-        rowvec costs;
 
 
     };

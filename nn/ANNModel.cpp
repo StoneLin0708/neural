@@ -11,7 +11,7 @@ ANNModel::ANNModel()
 
 }
 
-bool ANNModel::load(string &nnFilePath)
+bool ANNModel::load(string nnFilePath)
 {
     nnFile_t nnf;
     if(!nnFileRead(nnFilePath, nnf)){ cout << "nnFile fail" <<endl; return false;}

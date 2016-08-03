@@ -3,12 +3,10 @@
 namespace nn {
 namespace feedforward {
 
-FeedForwardCalLayer::FeedForwardCalLayer(int Layer, int Nodes, int Input, double LearningRate,
+FeedForwardCalLayer::FeedForwardCalLayer(
+        int Layer, int Nodes, int Input, double LearningRate,
                          fun::fact_t act, fun::fact_t dact):
     CalLayer(Layer,Nodes,Input){
-
-    out.zeros(Nodes + 1);
-    out(Nodes) = 1;
 
     weight.zeros(Input+1, Nodes);
     sum.zeros(Nodes);
@@ -49,6 +47,8 @@ InputLayer::InputLayer(int Nodes)
 HiddenLayer::HiddenLayer(int Layer, int Nodes, int Input, double LearningRate,
                          fun::fact_t act, fun::fact_t dact)
     : FeedForwardCalLayer(Layer, Nodes, Input, LearningRate, act, dact){
+    out.zeros(Nodes + 1);
+    out(Nodes) = 1;
 
 }
 
@@ -84,13 +84,8 @@ void HiddenLayer::update(){
 OutputLayer::OutputLayer(int Layer, int Nodes, int Input, double LearningRate,
                          fun::fact_t act, fun::fact_t dact,
                          fun::fcost_t cost, fun::fcost_t dcost)
-    : FeedForwardCalLayer(Layer, Nodes, Input, LearningRate, act, dact){
-    desire.zeros(Nodes);
-    this->cost.zeros(Nodes);
-    this->costs.zeros(Nodes);
-    this->fcost = cost;
-    this->fdcost = dcost;
-    out = out.subvec(0,Nodes-1);
+    : FeedForwardCalLayer(Layer, Nodes, Input, LearningRate, act, dact)
+    , BaseOutputLayer(Nodes,cost,dcost){
 }
 
 /*

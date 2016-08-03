@@ -4,10 +4,20 @@
 #include <iostream>
 #include <chrono>
 #include "Timer.hpp"
+#include "layer/include/anfis.hpp"
+#include "output/include/Info.hpp"
 
 using namespace std;
 
 int main(int argc, char* argv[]){
+    //anfis test
+    nn::ANFISModel anfis;
+    anfis.load("test/anfis_t0.nn");
+    //auto anfis = nn::anfis::CreateAnfis_Type3(2,2,1);
+    nn::showNetwork(anfis.network);
+    anfis.trainer.train();
+
+    return 0;
 
     if(argc != 2){
         cout<<"data" << endl;

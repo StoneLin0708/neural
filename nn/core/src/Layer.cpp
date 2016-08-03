@@ -50,6 +50,13 @@ std::ostream& operator<<(std::ostream &o, const CalLayer &l){
 
 }
 
+BaseOutputLayer::BaseOutputLayer(int Nodes, fun::fcost_t cost, fun::fcost_t dcost){
+    desire.zeros(Nodes);
+    this->cost.zeros(Nodes);
+    this->costs.zeros(Nodes);
+    this->fcost = cost;
+    this->fdcost = dcost;
+}
 
 
 }

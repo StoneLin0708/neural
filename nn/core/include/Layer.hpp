@@ -2,10 +2,9 @@
 #include <armadillo>
 #include <string>
 #include <iostream>
+#include "method/include/Method.hpp"
 
-using std::string;
 using arma::rowvec;
-using arma::mat;
 
 namespace nn{
 
@@ -33,7 +32,7 @@ namespace nn{
 
         int Inputs;
 
-        virtual void RandomInit(double wmin, double wmax);
+        virtual void RandomInit(double wmin, double wmax) = 0;
 
         virtual void clear() = 0;
         virtual void fp(rowvec *In) = 0;
@@ -46,5 +45,20 @@ namespace nn{
 
 	};
 
+    class BaseOutputLayer{
+    public:
+        BaseOutputLayer(int Nodes, fun::fcost_t cost, fun::fcost_t dcost);
+        virtual ~BaseOutputLayer(){}
+
+        virtual void CalCost() = 0;
+
+        rowvec desire;
+        rowvec cost;
+        rowvec costs;
+
+        fun::fcost_t fcost;
+        fun::fcost_t fdcost;
+
+    };
 
 }

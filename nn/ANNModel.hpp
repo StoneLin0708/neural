@@ -13,7 +13,7 @@ class ANNModel
 public:
     ANNModel();
 
-    virtual bool load(std::string &nnFilePath);
+    virtual bool load(std::string nnFilePath);
 
     Network network;
     Sample trainSample;
@@ -25,7 +25,7 @@ public:
 
 class ANFISModel : public ANNModel{
 public:
-    bool load(std::string &nnFilePath);
+    bool load(std::string nnFilePath);
 
 };
 
