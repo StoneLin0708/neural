@@ -26,6 +26,7 @@ public:
 class ANFISModel : public ANNModel{
 public:
     bool load(std::string nnFilePath);
+    bool GradientCheck(bool info);
 
 };
 

@@ -14,9 +14,11 @@ public:
 
     int iteration;
     double minCost;
+
+    SampleFeeder *sf;
+
 private:
     Network *n;
-    SampleFeeder *sf;
 
 };
 

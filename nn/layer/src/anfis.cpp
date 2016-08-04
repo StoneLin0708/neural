@@ -53,7 +53,8 @@ FPNLayer::FPNLayer(int Layer, int Inputs, int MSF,double LR)
     for(int i=0;i<Nodes;++i){
         int a=0;
         for(int j=0;j<Inputs;++j){
-            weight(i,j) = a + i % n_msf;
+            weight(i,j) = a + (i / ipow(n_msf,j)) % n_msf;
+            //weight(i,j) = a + i % ipow(n_msf,j);
             a+=n_msf;
         }
     }
@@ -78,6 +79,10 @@ void FPNLayer::fp(rowvec *in){
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
             fuzzy(i*n_msf+j) = node[i*n_msf+j].y( (*in)(i) );
+            /*
+            cout<< "f("<< i*n_msf+j<< "):"<<fuzzy(i*n_msf+j)<<"e="<<node[i*n_msf+j].expect
+                << "v="<<node[i*n_msf+j].variance<<endl;
+            */
             ifnanstop( fuzzy(i*n_msf+j) , "FPN fp fuzzy(" + to_string(i*n_msf+j)+")" )
             if(fuzzy(i*n_msf+j)>100){
                     cout << "FPN fp fuzzy max" << fuzzy(i*n_msf+j)<<endl;
@@ -87,12 +92,16 @@ void FPNLayer::fp(rowvec *in){
         }
     }
     //cout << fuzzy<<endl;
+    //cin.get();
 
     for(int i=0; i<Nodes; ++i){
         rule(i) = 1;
+        //cout<<"rule("<<i<<")=";
         for(int j=0;j<Inputs;++j){
             rule(i) *= fuzzy( weight(i,j) );
+            //cout <<"f("<<weight(i,j)<<")*";
         }
+        //cout<<"="<<rule(i)<<endl;
         ifnanstop( rule(i) , "FPN fp rule(" + to_string(i)+")" )
         if(rule(i)>100){
                 cout << "FPN fp rule max" << rule(i)<<endl;
@@ -100,6 +109,7 @@ void FPNLayer::fp(rowvec *in){
         }
     }
     //cout << rule <<endl;
+    //cin.get();
 
     sum = arma::accu(rule);
     //if(sum != sum) cin.get();
@@ -115,7 +125,7 @@ void FPNLayer::fp(rowvec *in){
 void FPNLayer::bp(BaseLayer *LowLayer){
     //cout << "FPN bp" <<endl;
     for(int i=0;i<Nodes;++i){
-        delta(i) *= -2 * ( sum - rule(i) ) * (1 / (sum * sum) );
+        delta(i) *= ( sum - rule(i) ) / (sum * sum) ;
         ifnanstop( delta(i) , "FPN bp delta(" + to_string(i) + ")")
     }
 
@@ -212,7 +222,11 @@ void CLayer::clear(){
 
 void CLayer::fp(rowvec *in){
     //cout << "C fp" <<endl;
+    //cout << (*din)<<endl;
+    //cout << weight <<endl;
     valf = (*din) * weight;
+    //cout << valf<<endl;
+    //cin.get();
     for(int i=0;i<Nodes;++i)
     ifnanstop( valf(i) , "C fp valf(" + to_string(i) + ")")
     out = valf % (*in);
@@ -234,7 +248,7 @@ void CLayer::bp(BaseLayer *LowLayer){
 
     wupdates += wupdate * delta;
 
-    static_cast<FPNLayer*>(LowLayer)->delta = delta * valf;
+    static_cast<FPNLayer*>(LowLayer)->delta = valf * delta;
 
     ++bpCounter;
 }

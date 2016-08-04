@@ -29,6 +29,7 @@ void Trainer::train()
         while(!sf->isLast()){
             sf->next();
             n->fp();
+            /*
             cout << "-------------------------------------------------"<<endl;
             cout << n->Layer[0]->out<<endl;
             cout << "f "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->fuzzy;
@@ -39,6 +40,7 @@ void Trainer::train()
             cout << n->OutLayer->desire<<endl;
             cout << "dc "<<static_cast<anfis::CLayer*>(n->Layer[2])->delta;
             cout << " dn "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->delta;
+            */
             //cin.get();
             if(calCost) n->OutLayer->CalCost();
             n->bp();
@@ -58,7 +60,7 @@ void Trainer::train()
         //cout << *static_cast<CalLayer*>(n->Layer[3]);
         cin.get();
         */
-        calCost = false;
+        //calCost = false;
         if(calCost){
             cout<< "\rcost :" << setw(12) << fixed<< setprecision(10)
                 << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)
@@ -70,7 +72,7 @@ void Trainer::train()
             calCost = false;
         }
 
-        if(timer.countMS() > 10) calCost = true;
+        if(timer.countMS() > 200) calCost = true;
 
         n->update();
         sf->reset();

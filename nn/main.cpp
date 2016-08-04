@@ -11,13 +11,22 @@ using namespace std;
 
 int main(int argc, char* argv[]){
     //anfis test
+    auto f = cout.flags();
     nn::ANFISModel anfis;
-    anfis.load("test/anfis_t0.nn");
+    //anfis.load("test/anfis_t0.nn");
+    anfis.load("test/anfis_t1.nn");
+    anfis.GradientCheck(true);
+    //return 0;
+
     //auto anfis = nn::anfis::CreateAnfis_Type3(2,2,1);
     nn::showNetwork(anfis.network);
     anfis.trainer.train();
+    cout.flags(f);
+    anfis.tester.test();
 
     return 0;
+    /*
+    */
 
     if(argc != 2){
         cout<<"data" << endl;

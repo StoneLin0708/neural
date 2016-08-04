@@ -50,6 +50,14 @@ void Tester::test(TestType type)
             sf->next();
             n->fp();
             n->OutLayer->CalCost();
+            /*
+        cout<<"----"<<endl;
+        cout<<n->input();
+        cout<<n->output();
+        cout<<n->desire();
+        cout<<"----"<<endl;
+        cin.get();
+        */
         }
         cout<< "cost :"
             << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)<<endl;
@@ -124,13 +132,6 @@ bool Tester::gradientChecking(bool info){
                 }
             }
         }
-        /*
-        for(int l=n->Layer.size()-1; l>0; --l){
-            auto layer = static_cast<CalLayer*>(n->Layer[l]);
-            layer->wupdateCounter = 0;
-                layer->wupdates.zeros();
-        }
-        */
     }
     if(info) cout << "gradient check success "<<endl;
     return true;

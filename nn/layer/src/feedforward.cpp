@@ -73,7 +73,7 @@ void HiddenLayer::bp(BaseLayer* LowLayer){
     ++bpCounter;
     if(Layer != 1)
         static_cast<HiddenLayer*>(LowLayer)->delta
-                = delta * weight.head_rows(Inputs-1).t();
+                = delta * weight.head_rows(Inputs).t();
 }
 
 void HiddenLayer::update(){

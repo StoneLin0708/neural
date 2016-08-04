@@ -1,5 +1,5 @@
 TrainSample=test/anfis_t0.s
-#TestSample=test/s
+TestSample=test/anfis_t0.s
 SampleType=Regression
 LearningRate=1
 CostFunction=mse
