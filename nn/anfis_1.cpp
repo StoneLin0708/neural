@@ -18,7 +18,7 @@ bool ANFISModel::load(string nnFilePath){
     if(!loadTrain(nnf, trainer)){ cout << "loadTrain fail" <<endl;return false;}
 
     int Input = trainSample.n_input;
-    double LR = 0.1;
+    double LR = 0.001;
     int MSF = 3;
 
     network.addInputLayer( new InputLayer(Input)) ;

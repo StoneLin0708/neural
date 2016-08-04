@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include "Timer.hpp"
+#include "layer/include/anfis.hpp"
 
 using namespace std;
 namespace nn{
@@ -28,6 +29,17 @@ void Trainer::train()
         while(!sf->isLast()){
             sf->next();
             n->fp();
+            cout << "-------------------------------------------------"<<endl;
+            cout << n->Layer[0]->out<<endl;
+            cout << "f "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->fuzzy;
+            cout << "p "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->rule;
+            cout << "n "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->out;
+            cout << "c "<<static_cast<anfis::CLayer*>(n->Layer[2])->out;
+            cout << n->Layer[3]->out;
+            cout << n->OutLayer->desire<<endl;
+            cout << "dc "<<static_cast<anfis::CLayer*>(n->Layer[2])->delta;
+            cout << " dn "<<static_cast<anfis::FPNLayer*>(n->Layer[1])->delta;
+            //cin.get();
             if(calCost) n->OutLayer->CalCost();
             n->bp();
             /*
@@ -46,6 +58,7 @@ void Trainer::train()
         //cout << *static_cast<CalLayer*>(n->Layer[3]);
         cin.get();
         */
+        calCost = false;
         if(calCost){
             cout<< "\rcost :" << setw(12) << fixed<< setprecision(10)
                 << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)

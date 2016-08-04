@@ -1,6 +1,15 @@
 #include "layer/include/anfis.hpp"
 #include <cmath>
 #include <random>
+#include <iostream>
+
+#define ifnanstop( x , text ){\
+        if( (x) != (x) ){\
+            std::cout << "nan : " << text << std::endl;\
+            cin.get();\
+        }\
+    }
+
 
 using namespace  std;
 
@@ -69,6 +78,12 @@ void FPNLayer::fp(rowvec *in){
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
             fuzzy(i*n_msf+j) = node[i*n_msf+j].y( (*in)(i) );
+            ifnanstop( fuzzy(i*n_msf+j) , "FPN fp fuzzy(" + to_string(i*n_msf+j)+")" )
+            if(fuzzy(i*n_msf+j)>100){
+                    cout << "FPN fp fuzzy max" << fuzzy(i*n_msf+j)<<endl;
+                    cout << "v"<<node[i*n_msf+j].variance<<",e"<<node[i*n_msf+j].expect<<endl;
+                    cin.get();
+            }
         }
     }
     //cout << fuzzy<<endl;
@@ -78,11 +93,20 @@ void FPNLayer::fp(rowvec *in){
         for(int j=0;j<Inputs;++j){
             rule(i) *= fuzzy( weight(i,j) );
         }
+        ifnanstop( rule(i) , "FPN fp rule(" + to_string(i)+")" )
+        if(rule(i)>100){
+                cout << "FPN fp rule max" << rule(i)<<endl;
+                cin.get();
+        }
     }
     //cout << rule <<endl;
 
-    double sum = arma::accu(rule);
+    sum = arma::accu(rule);
+    //if(sum != sum) cin.get();
+    ifnanstop( sum , "FPN fp sum")
     out = rule / sum;
+    for(int i=0;i<Nodes;++i)
+    ifnanstop( out(i) , "FPN fp out("+to_string(i)+") sum "+to_string(sum)+" rule("+to_string(i)+")"+to_string(rule(i)))
     //cout <<"FPN "<< out <<endl;
 
     ++fpCounter;
@@ -90,12 +114,19 @@ void FPNLayer::fp(rowvec *in){
 
 void FPNLayer::bp(BaseLayer *LowLayer){
     //cout << "FPN bp" <<endl;
+    for(int i=0;i<Nodes;++i){
+        delta(i) *= -2 * ( sum - rule(i) ) * (1 / (sum * sum) );
+        ifnanstop( delta(i) , "FPN bp delta(" + to_string(i) + ")")
+    }
+
     const auto &Lout = LowLayer->out;
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
             Membership &m = node[i*n_msf+j];
             m.dele = m.de( Lout(i) );
             m.delv = m.dv( Lout(i) );
+            ifnanstop( m.dele , "FPN bp mdele(" + to_string(i+n_msf+j) + ")")
+            ifnanstop( m.delv , "FPN bp mdelv(" + to_string(i+n_msf+j) + ")")
         }
     }
 
@@ -111,6 +142,7 @@ void FPNLayer::bp(BaseLayer *LowLayer){
 
             m.eupdates += m.eupdate;
             m.vupdates += m.vupdate;
+            //ifnanstop( m.dele , "FPN bp m(" + to_string(i+n_msf+j) + ")")
         }
     }
 
@@ -122,10 +154,29 @@ void FPNLayer::update(){
     for(int i=0; i<n_fuzzy; ++i){
         Membership &m = node[i];
         //cout << "pm["<<i<<"] e="<<m.expect<<" v="<<m.variance<<" eu="<<m.eupdates<<" vu="<<m.vupdates<<endl;
-        m.expect -= (m.eupdates * learningRate) / bpCounter;
-        m.variance -= (m.vupdates * learningRate) / bpCounter;
+        if((m.eupdates * learningRate) / bpCounter > 0.1){
+            cout << "meu max"<<(m.eupdates * learningRate) / bpCounter<<endl;
+            cin.get();
+        }
+        if((m.vupdates * learningRate) / bpCounter > 0.1){
+            cout << "mvu max"<<(m.vupdates * learningRate) / bpCounter<<endl;
+            cin.get();
+        }
+
+        m.expect -= m.eupdates * learningRate / (double)bpCounter;
+        m.variance -= m.vupdates * learningRate / (double)bpCounter;
+
+        if(fabs(m.expect) > 2){
+            cout << "e max"<< m.expect <<endl;
+            cin.get();
+        }
+        if(fabs(m.variance) > 2){
+            cout << "v max"<< m.variance <<endl;
+            cin.get();
+        }
+
         //cout << "um["<<i<<"] e="<<m.expect<<" v="<<m.variance<<" eu="<<m.eupdates<<" vu="<<m.vupdates<<endl;
-        cin.get();
+        //cin.get();
     }
 }
 
@@ -162,7 +213,13 @@ void CLayer::clear(){
 void CLayer::fp(rowvec *in){
     //cout << "C fp" <<endl;
     valf = (*din) * weight;
+    for(int i=0;i<Nodes;++i)
+    ifnanstop( valf(i) , "C fp valf(" + to_string(i) + ")")
     out = valf % (*in);
+    for(int i=0;i<Nodes;++i)
+    ifnanstop(  (*in)(i) , "C fp in(" + to_string(i) + ")")
+    for(int i=0;i<Nodes;++i)
+    ifnanstop( out(i) , "C fp out(" + to_string(i) + ")")
     ++fpCounter;
     //cout <<"C   "<< out <<endl;
 }

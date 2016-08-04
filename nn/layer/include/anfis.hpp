@@ -16,21 +16,21 @@ public:
         const double xe = x-expect;
         return exp( -1 * ( xe*xe/variance ) );
     }
-
+/*
     double dy(double x) const{
         const double xe = x-expect;
         return -2 * exp( -1 * ( xe*xe/variance ) ) * xe / variance;
     }
-
+*/
     double de(double x) const{
         const double xe = x-expect;
-        return 2 * exp( -1 * ( xe*xe/variance ) ) * xe / variance;
+        return 2 * xe / variance * exp( -1 * ( xe*xe/variance ) ) ;
     }
 
     double dv(double x) const{
         const double xe = x-expect;
-        const double temp = xe/variance;
-        return (exp( -1 * ( xe*xe/variance ) )  * temp * temp);
+        const double sxe = xe * xe;
+        return sxe * (1/(variance * variance)) * exp( -1 * ( sxe /variance ) );
     }
 
     double dele;
@@ -69,6 +69,9 @@ public:
     arma::rowvec fuzzy;
 
     arma::rowvec rule;
+
+    double sum;
+
     arma::rowvec delta;
 
     arma::imat weight;
