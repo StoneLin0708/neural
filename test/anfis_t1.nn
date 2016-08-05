@@ -1,0 +1,10 @@
+TrainSample=data/regression/diabetes
+TestSample=data/regression/diabetes
+SampleType=Regression
+LearningRate=1
+InputLayer=2
+HiddenLayer1=5,sigmoid
+HiddenLayer2=5,sigmoid
+OutputLayer=1,sigmoid
+CostFunction=mse
+Iteration=200000

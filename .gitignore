@@ -4,3 +4,5 @@ data/
 nntest/
 *.swp
 neural
+ical/
+/build*
