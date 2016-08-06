@@ -113,10 +113,10 @@ void FPNLayer::fp(rowvec *in){
 
     sum = arma::accu(rule);
     //if(sum != sum) cin.get();
-    ifnanstop( sum , "FPN fp sum")
+    //ifnanstop( sum , "FPN fp sum")
     out = rule / sum;
-    for(int i=0;i<Nodes;++i)
-    ifnanstop( out(i) , "FPN fp out("+to_string(i)+") sum "+to_string(sum)+" rule("+to_string(i)+")"+to_string(rule(i)))
+    //for(int i=0;i<Nodes;++i)
+    //ifnanstop( out(i) , "FPN fp out("+to_string(i)+") sum "+to_string(sum)+" rule("+to_string(i)+")"+to_string(rule(i)))
     //cout <<"FPN "<< out <<endl;
 
     ++fpCounter;
