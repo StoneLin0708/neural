@@ -1,8 +1,8 @@
-obj/
-result/
-data/
-nntest/
-*.swp
-neural
-ical/
+/obj/
+/result/
+/data/
+/nntest/
+/ical/
 /build*
+/*.dll
+*.swp

@@ -18,7 +18,6 @@ namespace feedforward {
 
         //trainig
         double LearningRate;
-        rowvec delta;
         mat wupdate;
         mat wupdates;
 

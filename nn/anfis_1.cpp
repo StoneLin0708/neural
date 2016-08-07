@@ -24,9 +24,11 @@ bool ANFISModel::load(string nnFilePath){
     int MSF = 3;
 
     network.addInputLayer( new InputLayer(Input)) ;
-    network.addMiddleLayer( new FPNLayer(1, Input, MSF, LR) );
-    network.addMiddleLayer( new CLayer(2, network.Layer[1]->Nodes, Input, &(network.Layer[0]->out), LR) );
-    auto o = new OLayer(3, Input);
+    network.addMiddleLayer( new FLayer(1, Input, MSF, LR) );
+    network.addMiddleLayer( new PLayer(2, network.Layer[1]->Nodes, MSF) );
+    network.addMiddleLayer( new NLayer(3, network.Layer[2]->Nodes) );
+    network.addMiddleLayer( new CLayer(4, network.Layer[3]->Nodes, Input, &(network.Layer[0]->out), LR) );
+    auto o = new OLayer(5, network.Layer[4]->Nodes);
     network.addOutputLayer(static_cast<BaseLayer*>(o),static_cast<BaseOutputLayer*>(o));
 
     trainer.set(&network,&trainSample);
@@ -34,12 +36,22 @@ bool ANFISModel::load(string nnFilePath){
 
     return true;
 }
-
+/*
+bool GradientCheckLayer(
+        [](unsigned int iter)->pair<bool isend,double &val> node,
+        [](unsigned int iter)->pair<bool isend,double val> delta,
+        double delta,
+        double errorMax){
+    return false;
+}
+*/
 bool ANFISModel::GradientCheck(bool info){
     double delta = 1.0e-4;
     double errorMax = 1.0e-6;
-    auto flayer = static_cast<anfis::FPNLayer*>(network.Layer[1]);
-    auto clayer = static_cast<anfis::CLayer*>(network.Layer[2]);
+    auto flayer = static_cast<anfis::FLayer*>(network.Layer[1]);
+    auto player = static_cast<anfis::PLayer*>(network.Layer[2]);
+    auto nlayer = static_cast<anfis::NLayer*>(network.Layer[3]);
+    auto clayer = static_cast<anfis::CLayer*>(network.Layer[4]);
 
     auto& sf = *(trainer.sf);
 
@@ -52,7 +64,8 @@ bool ANFISModel::GradientCheck(bool info){
         network.bp();
     }
 
-    for(int i=0; i<flayer->n_fuzzy; ++i){
+    //membership e
+    for(int i=0; i<flayer->Nodes; ++i){
         double &tval = flayer->node[i].expect;
         tval += delta;
         double del = 0;
@@ -84,7 +97,8 @@ bool ANFISModel::GradientCheck(bool info){
         }
     }
 
-    for(int i=0; i<flayer->n_fuzzy; ++i){
+    //embership v
+    for(int i=0; i<flayer->Nodes; ++i){
         double &tval = flayer->node[i].variance;
 
         tval += delta;
@@ -118,7 +132,72 @@ bool ANFISModel::GradientCheck(bool info){
 
     }
 
-/* clayer
+    for(int i=0; i<player->Nodes; ++i){
+        double &tval = player->out(i);
+        tval += delta;
+        double del = 0;
+        double bpdel;
+        sf.reset();
+        while (!sf.isLast()){
+            sf.next();
+            network.fp();
+            del += network.OutLayer->fcost(network.desire(),network.output(),1)(0);
+        }
+
+        tval -= 2*delta;
+        sf.reset();
+        while (!sf.isLast()){
+            sf.next();
+            network.fp();
+            del -= network.OutLayer->fcost(network.desire(),network.output(),1)(0);
+        }
+
+        tval += delta;
+        del /= 2 * delta * flayer->bpCounter;
+
+        bpdel = player->delta(i) / flayer->bpCounter;
+        cout<< "gc pLayer out("<< i<< ") bp="<< setprecision(5) <<bpdel<<" del="<< del;
+        if( fabs(bpdel - del) > errorMax){
+            cout<<" fail "<<bpdel*100/del<<"%"<<endl;
+        }else{
+            cout<<" success"<<endl;
+        }
+    }
+
+    for(int i=0; i<nlayer->Nodes; ++i){
+        double &tval = nlayer->out(i);
+        tval += delta;
+        double del = 0;
+        double bpdel;
+        sf.reset();
+        while (!sf.isLast()){
+            sf.next();
+            network.fp();
+            del += network.OutLayer->fcost(network.desire(),network.output(),1)(0);
+        }
+
+        tval -= 2*delta;
+        sf.reset();
+        while (!sf.isLast()){
+            sf.next();
+            network.fp();
+            del -= network.OutLayer->fcost(network.desire(),network.output(),1)(0);
+        }
+
+        tval += delta;
+        del /= 2 * delta * flayer->bpCounter;
+
+        bpdel = player->delta(i) / flayer->bpCounter;
+        cout<< "gc nLayer out("<< i<< ") bp="<< setprecision(5) <<bpdel<<" del="<< del;
+        if( fabs(bpdel - del) > errorMax){
+            cout<<" fail "<<bpdel*100/del<<"%"<<endl;
+        }else{
+            cout<<" success"<<endl;
+        }
+    }
+
+    //clayer
+    /*
     for(int i=0; i<(int)clayer->weight.n_rows; ++i){
         for(int j=0; j<(int)clayer->weight.n_cols; ++j){
             double &tval = clayer->weight(i,j);
@@ -153,7 +232,7 @@ bool ANFISModel::GradientCheck(bool info){
             }
         }
     }
-*/
+    */
 
     if(info) cout << "gradient check success "<<endl;
     return true;

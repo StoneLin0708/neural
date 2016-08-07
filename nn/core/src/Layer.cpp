@@ -31,6 +31,7 @@ CalLayer::CalLayer(int Layer, int Nodes, int Input)
     Inputs = Input;
     fpCounter = 0;
     bpCounter = 0;
+    delta.zeros(Nodes);
 
 }
 /*

@@ -39,6 +39,8 @@ namespace nn{
         virtual void bp(BaseLayer *LowLayer) = 0;
         virtual void update() = 0;
 
+        rowvec delta;
+
         int fpCounter;
         int bpCounter;
 

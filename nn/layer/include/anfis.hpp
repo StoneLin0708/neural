@@ -51,9 +51,9 @@ public:
     InputLayer(int Nodes);
 };
 
-class FPNLayer : public CalLayer{
+class FLayer : public CalLayer{
 public:
-    FPNLayer(int Layer, int Input, int MSF, double LR);
+    FLayer(int Layer, int Input, int MSF, double LR);
     void RandomInit(double,double){}
     void clear();
     void fp(rowvec *in);
@@ -63,22 +63,37 @@ public:
     double learningRate;
 
     int n_msf;
-    int n_fuzzy;
 
     std::vector<Membership> node;
+
+};
+
+class PLayer : public CalLayer{
+public:
+    PLayer(int Layer, int Input, int MSF);
+    void RandomInit(double,double){}
+    void clear(){}
+    void fp(rowvec *in);
+    void bp(BaseLayer *LowLayer);
+    void update(){}
+
     arma::rowvec fuzzy;
-
-    arma::rowvec rule;
-
-    double sum;
-
-    arma::rowvec delta;
 
     arma::imat weight;
 
 };
 
+class NLayer : public CalLayer{
+public:
+    NLayer(int Layer, int Input);
+    void RandomInit(double,double){}
+    void clear(){}
+    void fp(rowvec *in);
+    void bp(BaseLayer *LowLayer);
+    void update(){}
 
+    double sum;
+};
 
 class CLayer : public CalLayer{
 public:
@@ -96,10 +111,8 @@ public:
     arma::mat weight;
     arma::rowvec valf;
 
-    double delta;
     arma::mat wupdate;
     arma::mat wupdates;
-
 
 };
 

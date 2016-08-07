@@ -10,6 +10,12 @@
         }\
     }
 
+#define ifoorstop( x , range , text ){\
+        if( std::fabs( x ) > range ){\
+            std::cout << "oor : " << text << std::endl;\
+            cin.get();\
+        }\
+    }
 
 using namespace  std;
 
@@ -32,39 +38,23 @@ static int ipow(int x, int y){
     return r;
 }
 
-FPNLayer::FPNLayer(int Layer, int Inputs, int MSF,double LR)
-    : CalLayer(Layer,ipow(MSF,Inputs),Inputs){
+FLayer::FLayer(int Layer, int Inputs, int MSF,double LR)
+    : CalLayer(Layer, MSF * Inputs, Inputs){
     learningRate = LR;
     n_msf = MSF;
-    n_fuzzy = Inputs * MSF;
-    fuzzy.zeros(n_fuzzy);
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
+            const int n_iter = i*n_msf+j;
             node.push_back(Membership());
-            node[i*n_msf+j].expect = (j+1) * ((double)1.0/(n_msf+1));
-            node[i*n_msf+j].variance = (double)1.0/(n_msf+1);
-            cout << node[i*n_msf+j].expect <<','<< node[i*n_msf+j].variance <<endl;
+            node[n_iter].expect = (j+1) * ((double)1.0/(n_msf+1));
+            node[n_iter].variance = (double)1.0/(n_msf+1);
+            cout << node[n_iter].expect <<','<< node[n_iter].variance <<endl;
         }
     }
-
-    weight.zeros(Nodes, Inputs);
-    rule.zeros(Nodes);
-
-    for(int i=0;i<Nodes;++i){
-        int a=0;
-        for(int j=0;j<Inputs;++j){
-            weight(i,j) = a + (i / ipow(n_msf,j)) % n_msf;
-            //weight(i,j) = a + i % ipow(n_msf,j);
-            a+=n_msf;
-        }
-    }
-    //cout << weight <<endl;
-    //cin.get();
-
 }
 
-void FPNLayer::clear(){
-    for(int i=0;i<n_fuzzy;++i){
+void FLayer::clear(){
+    for(int i=0;i<Nodes;++i){
         auto &m = node[i];
         m.eupdates=0;
         m.vupdates=0;
@@ -73,95 +63,48 @@ void FPNLayer::clear(){
     bpCounter=0;
 }
 
-void FPNLayer::fp(rowvec *in){
-    //cout << "FPN fp" <<endl;
-    //cout << *in <<endl;
+void FLayer::fp(rowvec *in){
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
-            fuzzy(i*n_msf+j) = node[i*n_msf+j].y( (*in)(i) );
-            /*
-            cout<< "f("<< i*n_msf+j<< "):"<<fuzzy(i*n_msf+j)<<"e="<<node[i*n_msf+j].expect
-                << "v="<<node[i*n_msf+j].variance<<endl;
-            */
-            ifnanstop( fuzzy(i*n_msf+j) , "FPN fp fuzzy(" + to_string(i*n_msf+j)+")" )
-            if(fuzzy(i*n_msf+j)>100){
-                    cout << "FPN fp fuzzy max" << fuzzy(i*n_msf+j)<<endl;
-                    cout << "v"<<node[i*n_msf+j].variance<<",e"<<node[i*n_msf+j].expect<<endl;
-                    cin.get();
-            }
+            const int n_iter = i*n_msf+j;
+            out(n_iter) = node[n_iter].y( (*in)(i) );
+            ifnanstop( out(n_iter) , "F fp out(" + to_string(n_iter)+")" )
+            ifoorstop( out(n_iter) , 100 , "F fp max")
         }
     }
-    //cout << fuzzy<<endl;
-    //cin.get();
-
-    for(int i=0; i<Nodes; ++i){
-        rule(i) = 1;
-        //cout<<"rule("<<i<<")=";
-        for(int j=0;j<Inputs;++j){
-            rule(i) *= fuzzy( weight(i,j) );
-            //cout <<"f("<<weight(i,j)<<")*";
-        }
-        //cout<<"="<<rule(i)<<endl;
-        ifnanstop( rule(i) , "FPN fp rule(" + to_string(i)+")" )
-        if(rule(i)>100){
-                cout << "FPN fp rule max" << rule(i)<<endl;
-                cin.get();
-        }
-    }
-    //cout << rule <<endl;
-    //cin.get();
-
-    sum = arma::accu(rule);
-    //if(sum != sum) cin.get();
-    //ifnanstop( sum , "FPN fp sum")
-    out = rule / sum;
-    //for(int i=0;i<Nodes;++i)
-    //ifnanstop( out(i) , "FPN fp out("+to_string(i)+") sum "+to_string(sum)+" rule("+to_string(i)+")"+to_string(rule(i)))
-    //cout <<"FPN "<< out <<endl;
-
     ++fpCounter;
 }
 
-void FPNLayer::bp(BaseLayer *LowLayer){
-    //cout << "FPN bp" <<endl;
-    for(int i=0;i<Nodes;++i){
-        delta(i) *= ( sum - rule(i) ) / (sum * sum) ;
-        ifnanstop( delta(i) , "FPN bp delta(" + to_string(i) + ")")
-    }
 
+void FLayer::bp(BaseLayer *LowLayer){
     const auto &Lout = LowLayer->out;
+
+    //cout << "f bp delta"<<delta <<endl;
+    //cin.get();
     for(int i=0; i<Inputs; ++i){
         for(int j=0; j<n_msf; ++j){
-            Membership &m = node[i*n_msf+j];
+            const int n_iter = i*n_msf+j;
+            Membership &m = node[n_iter];
             m.dele = m.de( Lout(i) );
             m.delv = m.dv( Lout(i) );
-            ifnanstop( m.dele , "FPN bp mdele(" + to_string(i+n_msf+j) + ")")
-            ifnanstop( m.delv , "FPN bp mdelv(" + to_string(i+n_msf+j) + ")")
-        }
-    }
 
-        //cout << "d " << delta << " r "<< rule <<endl;
-    for(int i=0; i<Nodes; ++i){
-        //cout << "d " << delta(i) << " r "<< rule(i) <<endl;
-        for(int j=0;j<Inputs;++j){
-            const int &node_iter = weight(i,j);
-            Membership &m = node[ node_iter ];
-            m.eupdate = delta(i) * ( rule(i) / fuzzy(node_iter) )* m.dele;
-            m.vupdate = delta(i) * ( rule(i) / fuzzy(node_iter) )* m.delv;
-            //cout << "u i "<< i<<",j" << j<<"  "<<m.eupdate << ',' << m.vupdate <<endl;
+            m.eupdate = delta(n_iter) *  m.dele;
+            m.vupdate = delta(n_iter) *  m.delv;
 
             m.eupdates += m.eupdate;
             m.vupdates += m.vupdate;
-            //ifnanstop( m.dele , "FPN bp m(" + to_string(i+n_msf+j) + ")")
+
+            ifnanstop( m.dele , "FPN bp mdele(" + to_string(i+n_msf+j) + ")")
+            ifnanstop( m.delv , "FPN bp mdelv(" + to_string(i+n_msf+j) + ")")
         }
     }
 
     ++bpCounter;
 }
 
-void FPNLayer::update(){
+void FLayer::update(){
     //cout << "FPN update" <<endl;
-    for(int i=0; i<n_fuzzy; ++i){
+    for(int i=0; i<Nodes; ++i){
         Membership &m = node[i];
         //cout << "pm["<<i<<"] e="<<m.expect<<" v="<<m.variance<<" eu="<<m.eupdates<<" vu="<<m.vupdates<<endl;
         if((m.eupdates * learningRate) / bpCounter > 0.1){
@@ -176,18 +119,84 @@ void FPNLayer::update(){
         m.expect -= m.eupdates * learningRate / (double)bpCounter;
         m.variance -= m.vupdates * learningRate / (double)bpCounter;
 
-        if(fabs(m.expect) > 2){
-            cout << "e max"<< m.expect <<endl;
-            cin.get();
-        }
-        if(fabs(m.variance) > 2){
-            cout << "v max"<< m.variance <<endl;
-            cin.get();
-        }
+        ifoorstop( m.expect , 2 , "F update e max")
+        ifoorstop( m.variance , 2 , "F update v max")
 
         //cout << "um["<<i<<"] e="<<m.expect<<" v="<<m.variance<<" eu="<<m.eupdates<<" vu="<<m.vupdates<<endl;
         //cin.get();
     }
+}
+
+//----------------------------------------------------------
+//
+
+PLayer::PLayer(int Layer, int Input, int MSF)
+    :CalLayer(Layer, ipow(MSF, Input/MSF), Input){
+
+    weight.zeros(Nodes, Inputs/MSF);
+
+    for(int i=0;i<Nodes;++i){
+        int a=0;
+        for(unsigned int j=0;j<weight.n_cols;++j){
+            weight(i,j) = a + (i / ipow(MSF,j)) % MSF;
+            a+=MSF;
+        }
+    }
+}
+
+
+void PLayer::fp(rowvec *in){
+    for(int i=0; i<Nodes; ++i){
+        out(i) = 1;
+        //cout<<"rule("<<i<<")=";
+        for(unsigned int j=0; j<weight.n_cols; ++j){
+            out(i) *= (*in)( weight(i,j) );
+            //cout <<"f("<<weight(i,j)<<")*";
+        }
+        //cout<<"="<<rule(i)<<endl;
+        ifnanstop( out(i) , "P fp rule(" + to_string(i)+")" )
+        ifoorstop( out(i) , 100 , "P fp rule max")
+    }
+
+    ++fpCounter;
+}
+
+void PLayer::bp(BaseLayer *LowLayer){
+    auto L = static_cast<CalLayer*>(LowLayer);
+    L->delta.zeros();
+    //cout << "P bp delta" << delta <<endl;
+    //cout << "P bp Ldel" << L->delta<<endl;
+    for(int i=0; i<Nodes; ++i){
+        for(unsigned int j=0;j<weight.n_cols;++j){
+            const int &n_iter = weight(i,j);
+            L->delta(n_iter) += delta(i) * (out(i) / L->out(n_iter) );
+            //cout << "P bp n_iter="<<n_iter<<endl;
+        }
+    }
+    //cout << "P bp Ldel" << L->delta<<endl;
+
+    ++bpCounter;
+}
+
+//----------------------------------------------------------
+//
+NLayer::NLayer(int Layer, int Input)
+    :CalLayer(Layer, Input, Input){
+}
+
+void NLayer::fp(rowvec *in){
+    sum = arma::accu(*in);
+    out = *in / sum;
+    ++fpCounter;
+}
+
+void NLayer::bp(BaseLayer *LowLayer){
+    for(int i=0;i<Nodes;++i){
+        static_cast<CalLayer*>(LowLayer)->delta(i)
+                = delta(i) * ( sum - LowLayer->out(i) ) / (sum * sum) ;
+        ifnanstop( delta(i) , "N bp delta(" + to_string(i) + ")")
+    }
+    ++bpCounter;
 }
 
 //----------------------------------------------------------
@@ -199,7 +208,6 @@ CLayer::CLayer(int Layer, int Nodes, int Input, arma::rowvec *DataInput, double 
     learningRate = LR;
     valf.zeros(Nodes);
 
-    delta = 0;
     wupdate.zeros(Input+1, Nodes);
     wupdates.zeros(Input+1, Nodes);
     din = DataInput;
@@ -244,11 +252,12 @@ void CLayer::bp(BaseLayer *LowLayer){
     //cout << *din<<endl;
     for(int i=0; i<Nodes; ++i)
         for(int j=0; j<=Inputs; ++j)
-            wupdate(j,i) = (*din)(j) * LowOut(i);
+            wupdate(j,i) = delta(i) * (*din)(j) * LowOut(i);
 
-    wupdates += wupdate * delta;
+    wupdates += wupdate;
 
-    static_cast<FPNLayer*>(LowLayer)->delta = valf * delta;
+    //cout << "C bp delta"<<delta<<endl;
+    static_cast<CalLayer*>(LowLayer)->delta = valf % delta;
 
     ++bpCounter;
 }
@@ -288,7 +297,9 @@ void OLayer::fp(rowvec *in){
 }
 
 void OLayer::bp(BaseLayer *LowLayer){
-    static_cast<CLayer*>(LowLayer)->delta = fdcost(desire,out,1)(0);
+    auto L = static_cast<CalLayer*>(LowLayer);
+    for(int i=0; i<L->Nodes; ++i)
+        L->delta(i) = fdcost(desire, out, Nodes)(0);
     ++bpCounter;
 }
 
@@ -298,7 +309,7 @@ void OLayer::bp(BaseLayer *LowLayer){
 Network* CreateAnfis_Type3(int Input, int MSF, double LR){
     Network* n = new Network;
     n->addInputLayer( new InputLayer(Input)) ;
-    n->addMiddleLayer( new FPNLayer(1, Input, MSF,LR) );
+    n->addMiddleLayer( new FLayer(1, Input, MSF,LR) );
     n->addMiddleLayer( new CLayer(2, n->Layer[1]->Nodes, Input, &(n->Layer[0]->out), LR) );
     auto o = new OLayer(3, Input);
     n->addOutputLayer(static_cast<BaseLayer*>(o),static_cast<BaseOutputLayer*>(o));

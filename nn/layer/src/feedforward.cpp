@@ -12,7 +12,6 @@ FeedForwardCalLayer::FeedForwardCalLayer(
     sum.zeros(Nodes);
 
     this->LearningRate = LearningRate;
-    delta.zeros(Nodes);
     wupdate.zeros(Input+1, Nodes);
     wupdates.zeros(Input+1, Nodes);
 
