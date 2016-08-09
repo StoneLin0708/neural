@@ -1,5 +1,11 @@
 #neural network practice
 
+  * network type
+  
+  1. feedforward
+
+  2. anfis
+
 ##nn file format
 
   #ignore
