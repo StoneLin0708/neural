@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 
 #define TIMER_MEASURE_MACRO( fun , text ) {\
         do{\
@@ -8,7 +9,7 @@
             timer.start();\
             fun\
             auto t = timer.countMS();\
-            std::cout << text <<  t << " ms" << std::endl;\
+            std::cout << text << std::fixed << t << " ms" << std::endl;\
         }while(false);\
     }
 

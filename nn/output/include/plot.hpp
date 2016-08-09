@@ -1,5 +1,5 @@
 #pragma once
-#include "ANNModel.hpp"
+#include "model/ANNModel.hpp"
 #include <string>
 
 using std::string;

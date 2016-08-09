@@ -34,6 +34,7 @@ void Tester::testClassification(){
             ++right;
     }
     cout<< "Test Cost : "
+        << fixed << setprecision(10)
         << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)<<endl
         << "Classification Accurate : " << fixed << setprecision(2)
         << 100 * (double)right / static_cast<CalLayer*>(n->Layer.back())->fpCounter <<endl;
@@ -42,6 +43,7 @@ void Tester::testClassification(){
 
 void Tester::test(TestType type)
 {
+    auto f = cout.flags();
     switch (type) {
     case non:
         sf->reset();
@@ -60,6 +62,7 @@ void Tester::test(TestType type)
         */
         }
         cout<< "cost :"
+            << fixed << setprecision(10)
             << mean(n->OutLayer->costs/static_cast<CalLayer*>(n->Layer.back())->fpCounter)<<endl;
         break;
     case classification:
@@ -77,6 +80,7 @@ void Tester::test(TestType type)
         cout << "hi"<<endl;
         break;
     }
+    cout.flags(f);
 }
 
 

@@ -1,9 +1,7 @@
 #pragma once
 #include "core/include/Layer.hpp"
-
 #include <string>
 #include <vector>
-
 
 namespace nn{
 
@@ -34,7 +32,6 @@ namespace nn{
         rowvec *ivec;
         rowvec *ovec;
         rowvec *dvec;
-
 
     };
 

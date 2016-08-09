@@ -1,8 +1,8 @@
 #pragma once
 #include "core/include/network.hpp"
 #include "load/include/Sample.hpp"
-#include "Trainer.hpp"
-#include "Tester.hpp"
+#include "train/Trainer.hpp"
+#include "train/Tester.hpp"
 
 #include <string>
 

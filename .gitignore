@@ -3,6 +3,6 @@
 /data/
 /nntest/
 /ical/
-/build*
+/build/
 /*.dll
 *.swp

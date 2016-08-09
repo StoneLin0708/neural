@@ -1,7 +1,7 @@
 #include "core/include/network.hpp"
 #include "method/include/Method.hpp"
 #include "load/include/Sample.hpp"
-#include "Trainer.hpp"
+#include "train/Trainer.hpp"
 
 #include <string>
 #include <map>

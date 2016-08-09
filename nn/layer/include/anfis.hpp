@@ -56,7 +56,7 @@ public:
     FLayer(int Layer, int Input, int MSF, double LR);
     void RandomInit(double,double){}
     void clear();
-    void fp(rowvec *in);
+    void fp(arma::rowvec *in);
     void bp(BaseLayer *LowLayer);
     void update();
 

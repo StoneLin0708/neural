@@ -1,4 +1,4 @@
-#include "layer/include/anfis.hpp"
+#include "../include/anfis.hpp"
 #include <cmath>
 #include <random>
 #include <iostream>
@@ -68,8 +68,8 @@ void FLayer::fp(rowvec *in){
         for(int j=0; j<n_msf; ++j){
             const int n_iter = i*n_msf+j;
             out(n_iter) = node[n_iter].y( (*in)(i) );
-            ifnanstop( out(n_iter) , "F fp out(" + to_string(n_iter)+")" )
-            ifoorstop( out(n_iter) , 100 , "F fp max")
+            //ifnanstop( out(n_iter) , "F fp out(" + to_string(n_iter)+")" )
+            //ifoorstop( out(n_iter) , 100 , "F fp max")
         }
     }
     ++fpCounter;
@@ -94,8 +94,8 @@ void FLayer::bp(BaseLayer *LowLayer){
             m.eupdates += m.eupdate;
             m.vupdates += m.vupdate;
 
-            ifnanstop( m.dele , "FPN bp mdele(" + to_string(i+n_msf+j) + ")")
-            ifnanstop( m.delv , "FPN bp mdelv(" + to_string(i+n_msf+j) + ")")
+            //ifnanstop( m.dele , "FPN bp mdele(" + to_string(i+n_msf+j) + ")")
+            //ifnanstop( m.delv , "FPN bp mdelv(" + to_string(i+n_msf+j) + ")")
         }
     }
 
@@ -119,8 +119,8 @@ void FLayer::update(){
         m.expect -= m.eupdates * learningRate / (double)bpCounter;
         m.variance -= m.vupdates * learningRate / (double)bpCounter;
 
-        ifoorstop( m.expect , 2 , "F update e max")
-        ifoorstop( m.variance , 2 , "F update v max")
+        //ifoorstop( m.expect , 2 , "F update e max")
+        //ifoorstop( m.variance , 2 , "F update v max")
 
         //cout << "um["<<i<<"] e="<<m.expect<<" v="<<m.variance<<" eu="<<m.eupdates<<" vu="<<m.vupdates<<endl;
         //cin.get();
@@ -147,15 +147,13 @@ PLayer::PLayer(int Layer, int Input, int MSF)
 
 void PLayer::fp(rowvec *in){
     for(int i=0; i<Nodes; ++i){
-        out(i) = 1;
-        //cout<<"rule("<<i<<")=";
+        out(i) = 1.0;
+        //cout<< "p fp o("<< i<< ")=1.0";
         for(unsigned int j=0; j<weight.n_cols; ++j){
             out(i) *= (*in)( weight(i,j) );
-            //cout <<"f("<<weight(i,j)<<")*";
+            //cout<<"*f("<<weight(i,j)<<")["<< (*in)(weight(i,j)) <<"]";
         }
-        //cout<<"="<<rule(i)<<endl;
-        ifnanstop( out(i) , "P fp rule(" + to_string(i)+")" )
-        ifoorstop( out(i) , 100 , "P fp rule max")
+        //cout<<"="<<out(i)<<'\n';
     }
 
     ++fpCounter;
@@ -164,16 +162,12 @@ void PLayer::fp(rowvec *in){
 void PLayer::bp(BaseLayer *LowLayer){
     auto L = static_cast<CalLayer*>(LowLayer);
     L->delta.zeros();
-    //cout << "P bp delta" << delta <<endl;
-    //cout << "P bp Ldel" << L->delta<<endl;
-    for(int i=0; i<Nodes; ++i){
+    for(unsigned int i=0; i<weight.n_rows; ++i){
         for(unsigned int j=0;j<weight.n_cols;++j){
             const int &n_iter = weight(i,j);
             L->delta(n_iter) += delta(i) * (out(i) / L->out(n_iter) );
-            //cout << "P bp n_iter="<<n_iter<<endl;
         }
     }
-    //cout << "P bp Ldel" << L->delta<<endl;
 
     ++bpCounter;
 }
@@ -194,7 +188,7 @@ void NLayer::bp(BaseLayer *LowLayer){
     for(int i=0;i<Nodes;++i){
         static_cast<CalLayer*>(LowLayer)->delta(i)
                 = delta(i) * ( sum - LowLayer->out(i) ) / (sum * sum) ;
-        ifnanstop( delta(i) , "N bp delta(" + to_string(i) + ")")
+        //ifnanstop( delta(i) , "N bp delta(" + to_string(i) + ")")
     }
     ++bpCounter;
 }
@@ -235,13 +229,11 @@ void CLayer::fp(rowvec *in){
     valf = (*din) * weight;
     //cout << valf<<endl;
     //cin.get();
-    for(int i=0;i<Nodes;++i)
-    ifnanstop( valf(i) , "C fp valf(" + to_string(i) + ")")
     out = valf % (*in);
-    for(int i=0;i<Nodes;++i)
-    ifnanstop(  (*in)(i) , "C fp in(" + to_string(i) + ")")
+    /*
     for(int i=0;i<Nodes;++i)
     ifnanstop( out(i) , "C fp out(" + to_string(i) + ")")
+    */
     ++fpCounter;
     //cout <<"C   "<< out <<endl;
 }
@@ -313,7 +305,6 @@ Network* CreateAnfis_Type3(int Input, int MSF, double LR){
     n->addMiddleLayer( new CLayer(2, n->Layer[1]->Nodes, Input, &(n->Layer[0]->out), LR) );
     auto o = new OLayer(3, Input);
     n->addOutputLayer(static_cast<BaseLayer*>(o),static_cast<BaseOutputLayer*>(o));
-
     return n;
 }
 
